@@ -51,6 +51,11 @@ public class FilmController {
         return film;
     }
 
+    @ExceptionHandler(ValidationException.class)
+    public String handleException(ValidationException exception) {
+        return exception.getMessage();
+    }
+
     public int getNewId() {
         return ++filmId;
     }

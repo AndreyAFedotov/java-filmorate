@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
@@ -25,7 +26,7 @@ public class UserController {
 
     @PostMapping
     public User createUser(@Valid @RequestBody User user) {
-        if (user.getName() == null || user.getName().isEmpty() || user.getName().isBlank()) {
+        if (StringUtils.isBlank(user.getName())) {
             user.setName(user.getLogin());
         }
         user.setId(getNewId());
@@ -40,12 +41,17 @@ public class UserController {
             log.warn("Пользователя не существует");
             throw new ValidationException("Такого пользователя не существует");
         }
-        if (user.getName() == null || user.getName().isEmpty() || user.getName().isBlank()) {
+        if (StringUtils.isBlank(user.getName())) {
             user.setName(user.getLogin());
         }
         users.put(user.getId(), user);
         log.info("Обновлен пользователь: {}", user.getName());
         return user;
+    }
+
+    @ExceptionHandler(ValidationException.class)
+    public String handleException(ValidationException exception) {
+        return exception.getMessage();
     }
 
     private int getNewId() {
