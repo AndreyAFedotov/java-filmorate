@@ -49,11 +49,6 @@ public class UserController {
         return user;
     }
 
-    @ExceptionHandler(ValidationException.class)
-    public String handleException(ValidationException exception) {
-        return exception.getMessage();
-    }
-
     private int getNewId() {
         return ++userId;
     }
