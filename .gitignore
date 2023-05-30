@@ -44,3 +44,7 @@ build/
 
 *.db
 db/*
+/.github/
+/.mvn/
+/.mvn/
+/.mvn/wrapper/
