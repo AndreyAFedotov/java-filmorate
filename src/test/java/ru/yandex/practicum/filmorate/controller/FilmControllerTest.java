@@ -4,7 +4,6 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import javax.validation.ConstraintViolation;
@@ -103,19 +102,4 @@ public class FilmControllerTest {
         assertFalse(violations.isEmpty(), NEED_FALSE);
         assertEquals(1, violations.size(), ERR_COUNT);
     }
-
-//    @Test
-//    @DisplayName("Дата релиза")
-//    void releaseDateTest() {
-//        final Film film = Film.builder()
-//                .name(NAME)
-//                .description(DESCRIPTION)
-//                .releaseDate(LocalDate.parse("1895-12-27"))
-//                .duration(DURATION)
-//                .build();
-//        FilmController filmCnt = new FilmController();
-//        Throwable thrown = assertThrows(ValidationException.class, () ->
-//                filmCnt.createFilm(film));
-//        assertEquals("Дата релиза раньше 28 декабря 1895 года", thrown.getMessage());
-//    }
 }

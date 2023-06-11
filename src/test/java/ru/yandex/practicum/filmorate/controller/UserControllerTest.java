@@ -141,18 +141,4 @@ public class UserControllerTest {
         assertFalse(violations.isEmpty(), NEED_FALSE);
         assertEquals(1, violations.size(), ERR_COUNT);
     }
-
-//    @Test
-//    @DisplayName("Логин в качестве имени")
-//    void nameLoginTest() {
-//        final User user = User.builder()
-//                .email(EMAIL)
-//                .login(LOGIN)
-//                .name("")
-//                .birthday(LocalDate.parse(DATE))
-//                .build();
-//        UserController userCnt = new UserController();
-//        final User resUser = userCnt.createUser(user);
-//        assertEquals(LOGIN, resUser.getName(), "Имя не обновилось из Логина");
-//    }
 }
