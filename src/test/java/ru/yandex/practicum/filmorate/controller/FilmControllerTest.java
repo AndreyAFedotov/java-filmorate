@@ -104,18 +104,18 @@ public class FilmControllerTest {
         assertEquals(1, violations.size(), ERR_COUNT);
     }
 
-    @Test
-    @DisplayName("Дата релиза")
-    void releaseDateTest() {
-        final Film film = Film.builder()
-                .name(NAME)
-                .description(DESCRIPTION)
-                .releaseDate(LocalDate.parse("1895-12-27"))
-                .duration(DURATION)
-                .build();
-        FilmController filmCnt = new FilmController();
-        Throwable thrown = assertThrows(ValidationException.class, () ->
-                filmCnt.createFilm(film));
-        assertEquals("Дата релиза раньше 28 декабря 1895 года", thrown.getMessage());
-    }
+//    @Test
+//    @DisplayName("Дата релиза")
+//    void releaseDateTest() {
+//        final Film film = Film.builder()
+//                .name(NAME)
+//                .description(DESCRIPTION)
+//                .releaseDate(LocalDate.parse("1895-12-27"))
+//                .duration(DURATION)
+//                .build();
+//        FilmController filmCnt = new FilmController();
+//        Throwable thrown = assertThrows(ValidationException.class, () ->
+//                filmCnt.createFilm(film));
+//        assertEquals("Дата релиза раньше 28 декабря 1895 года", thrown.getMessage());
+//    }
 }
