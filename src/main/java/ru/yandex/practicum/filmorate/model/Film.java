@@ -5,11 +5,12 @@ import lombok.Data;
 
 import javax.validation.constraints.*;
 import java.time.LocalDate;
+import java.util.Set;
 
 @Data
 @Builder
 public class Film {
-    private int id;
+    private long id;
 
     @NotBlank
     @NotNull
@@ -23,4 +24,8 @@ public class Film {
 
     @Positive
     private int duration;
+
+    private Set<Long> likes;
+
+    private int likesCount;
 }
