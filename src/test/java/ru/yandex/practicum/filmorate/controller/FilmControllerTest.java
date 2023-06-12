@@ -4,7 +4,13 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.film.InMemoryFilmStorage;
+import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
+import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
@@ -101,5 +107,23 @@ public class FilmControllerTest {
         Set<ConstraintViolation<Film>> violations = validator.validate(film);
         assertFalse(violations.isEmpty(), NEED_FALSE);
         assertEquals(1, violations.size(), ERR_COUNT);
+    }
+
+    @Test
+    @DisplayName("Дата релиза")
+    void releaseDateTest() {
+        final Film film = Film.builder()
+                .name(NAME)
+                .description(DESCRIPTION)
+                .releaseDate(LocalDate.parse("1895-12-27"))
+                .duration(DURATION)
+                .build();
+        FilmStorage filmSt = new InMemoryFilmStorage();
+        UserStorage userSt = new InMemoryUserStorage();
+        FilmService filmSv = new FilmService(filmSt, userSt);
+        FilmController filmCnt = new FilmController(filmSv);
+        Throwable thrown = assertThrows(ValidationException.class, () ->
+                filmCnt.createFilm(film));
+        assertEquals("Дата релиза раньше 28 декабря 1895 года", thrown.getMessage());
     }
 }

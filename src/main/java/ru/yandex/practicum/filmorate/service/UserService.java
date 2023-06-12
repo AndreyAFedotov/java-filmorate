@@ -61,8 +61,7 @@ public class UserService {
     public List<User> getMutualFriends(long id, long otherId) {
         checkUserIsExist(id);
         checkUserIsExist(otherId);
-        List<User> friends = userStorage.getMutualFriends(id, otherId);
-        return friends;
+        return userStorage.getMutualFriends(id, otherId);
     }
 
     public void checkUserIsExist(long id) {

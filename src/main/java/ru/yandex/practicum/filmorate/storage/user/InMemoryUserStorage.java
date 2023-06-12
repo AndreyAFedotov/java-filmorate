@@ -20,6 +20,7 @@ public class InMemoryUserStorage implements UserStorage {
     @Override
     public User createUser(User user) {
         user.setId(getNewId());
+        user.setFriends(new HashSet<>());
         users.put(user.getId(), user);
         log.info("Создан пользователь: {}", user.getName());
         return user;
@@ -27,6 +28,9 @@ public class InMemoryUserStorage implements UserStorage {
 
     @Override
     public User updateUser(User user) {
+        if (user.getFriends() == null) {
+            user.setFriends(new HashSet<>());
+        }
         users.put(user.getId(), user);
         log.info("Обновлен пользователь: {}", user.getName());
         return user;
@@ -44,16 +48,8 @@ public class InMemoryUserStorage implements UserStorage {
 
         final User userOne = users.get(id);
         final User userTwo = users.get(friendId);
-        if (userOne.getFriends() == null) {
-            friendsOne = new HashSet<>();
-        } else {
-            friendsOne = userOne.getFriends();
-        }
-        if (userTwo.getFriends() == null) {
-            friendsTwo = new HashSet<>();
-        } else {
-            friendsTwo = userTwo.getFriends();
-        }
+        friendsOne = userOne.getFriends();
+        friendsTwo = userTwo.getFriends();
         friendsOne.add(friendId);
         friendsTwo.add(id);
         userOne.setFriends(friendsOne);
@@ -90,7 +86,7 @@ public class InMemoryUserStorage implements UserStorage {
     public List<User> getMutualFriends(long id, long otherId) {
         final User userOne = users.get(id);
         final User userTwo = users.get(otherId);
-        if (userOne.getFriends() == null || userTwo.getFriends() == null) {
+        if (userOne.getFriends().isEmpty() || userTwo.getFriends().isEmpty()) {
             log.info("У пользователей " + id + " и " + otherId + " нет общих друзей");
             return new ArrayList<>();
         }
@@ -100,13 +96,12 @@ public class InMemoryUserStorage implements UserStorage {
         if (friendsOne.isEmpty()) {
             log.info("У пользователей " + id + " и " + otherId + " нет общих друзей");
             return new ArrayList<>();
-        } else {
-            List<User> output = new ArrayList<>();
-            for (Long idUser : friendsOne) {
-                output.add(users.get(idUser));
-            }
-            return output;
         }
+        List<User> result = new ArrayList<>();
+        for (Long idUser : friendsOne) {
+            result.add(users.get(idUser));
+        }
+        return result;
     }
 
     @Override

@@ -22,6 +22,7 @@ public class InMemoryFilmStorage implements FilmStorage {
     @Override
     public Film createFilm(Film film) {
         film.setId(getNewId());
+        film.setLikes(new HashSet<>());
         films.put(film.getId(), film);
         log.info("Добавлен фильм: {}", film.getName());
         return film;
@@ -29,6 +30,9 @@ public class InMemoryFilmStorage implements FilmStorage {
 
     @Override
     public Film updateFilm(Film film) {
+        if (film.getLikes() == null) {
+            film.setLikes(new HashSet<>());
+        }
         films.put(film.getId(), film);
         log.info("Обновлен фильм: {}", film.getName());
         return film;
@@ -43,9 +47,6 @@ public class InMemoryFilmStorage implements FilmStorage {
     public Film setLikeToFilm(long id, long userId) {
         Film film = films.get(id);
         Set<Long> likes = film.getLikes();
-        if (likes == null) {
-            likes = new HashSet<>();
-        }
         likes.add(userId);
         film.setLikes(likes);
         int likesCount = film.getLikesCount();
@@ -59,7 +60,7 @@ public class InMemoryFilmStorage implements FilmStorage {
     public Film deleteLikeFromFilm(long id, long userId) {
         Film film = films.get(id);
         Set<Long> likes = film.getLikes();
-        if (likes == null || !likes.contains(userId)) {
+        if (!likes.contains(userId)) {
             throw new NotFoundException("Пользователь " + userId + " не ставил лайк фильму " + id);
         }
         likes.remove(userId);

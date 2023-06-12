@@ -4,6 +4,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
+import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
+import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
@@ -140,5 +143,21 @@ public class UserControllerTest {
         Set<ConstraintViolation<User>> violations = validator.validate(user);
         assertFalse(violations.isEmpty(), NEED_FALSE);
         assertEquals(1, violations.size(), ERR_COUNT);
+    }
+
+    @Test
+    @DisplayName("Логин в качестве имени")
+    void nameLoginTest() {
+        final User user = User.builder()
+                .email(EMAIL)
+                .login(LOGIN)
+                .name("")
+                .birthday(LocalDate.parse(DATE))
+                .build();
+        UserStorage userSt = new InMemoryUserStorage();
+        UserService userSv = new UserService(userSt);
+        UserController userCnt = new UserController(userSv);
+        final User resUser = userCnt.createUser(user);
+        assertEquals(LOGIN, resUser.getName(), "Имя не обновилось из Логина");
     }
 }

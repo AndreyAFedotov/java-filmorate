@@ -13,9 +13,9 @@ import java.util.List;
 
 @Service
 public class FilmService {
+    private static final LocalDate FILM_RELEASE_DATE = LocalDate.of(1895, 12, 28);
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
-    private static final LocalDate FILM_RELEASE_DATE = LocalDate.of(1895, 12, 28);
 
     @Autowired
     public FilmService(FilmStorage filmStorage, UserStorage userStorage) {
@@ -78,7 +78,7 @@ public class FilmService {
 
     public Film getFilm(long id) {
         if (!filmStorage.isExists(id)) {
-            throw new NotFoundException("ФИльма не существует: " + id);
+            throw new NotFoundException("Фильма не существует: " + id);
         } else {
             return filmStorage.getFilm(id);
         }
