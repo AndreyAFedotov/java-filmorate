@@ -15,15 +15,15 @@ public class FilmorateExceptionHandler {
     @ExceptionHandler
     @ResponseStatus(code = HttpStatus.BAD_REQUEST)
     public ErrorResponse handleValidationException(final ValidationException e) {
-        log.warn("Ошибка валидации --- " + e.getMessage());
-        return new ErrorResponse("Ошибка валидации", e.getMessage());
+        log.warn("Validation error --- " + e.getMessage());
+        return new ErrorResponse("Validation error", e.getMessage());
     }
 
     @ExceptionHandler
     @ResponseStatus(code = HttpStatus.NOT_FOUND)
     public ErrorResponse handleNotFoundException(final NotFoundException e) {
-        log.warn("Ошибка поиска --- " + e.getMessage());
-        return new ErrorResponse("Ошибка поиска", e.getMessage());
+        log.warn("Search error --- " + e.getMessage());
+        return new ErrorResponse("Search error", e.getMessage());
     }
 
     @ExceptionHandler
@@ -35,8 +35,15 @@ public class FilmorateExceptionHandler {
             sb.append(err.getDefaultMessage()).append(". ");
         }
         sb.delete(sb.length() - 2, sb.length());
-        log.warn("Ошибка валидации --- " + sb.toString());
-        return new ErrorResponse("Ошибка валидации", sb.toString());
+        log.warn("Validation error --- " + sb);
+        return new ErrorResponse("Validation error", sb.toString());
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(code = HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleSQLException(final SQLWorkException e) {
+        log.warn("SQL Error: ", e);
+        return new ErrorResponse("SQL Error: ", e.getMessage());
     }
 
     @ExceptionHandler
