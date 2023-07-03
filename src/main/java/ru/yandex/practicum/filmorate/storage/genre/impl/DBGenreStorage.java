@@ -15,8 +15,8 @@ import java.util.List;
 @Component("DBGenreStorage")
 @Slf4j
 public class DBGenreStorage implements GenreStorage {
-    public static final String GENRE_ID = "GENRE_ID";
-    public static final String NAME = "NAME";
+    private static final String GENRE_ID = "GENRE_ID";
+    private static final String NAME = "NAME";
     private final JdbcTemplate jdbcTemplate;
 
     public DBGenreStorage(JdbcTemplate jdbcTemplate) {

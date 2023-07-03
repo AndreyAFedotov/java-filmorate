@@ -15,9 +15,9 @@ import java.util.List;
 @Component("DBMpaStorage")
 @Slf4j
 public class DBMpaStorage implements MpaStorage {
-    public static final String MPA_ID = "MPA_ID";
-    public static final String NAME = "NAME";
-    public static final String DESCRIPTION = "DESCRIPTION";
+    private static final String MPA_ID = "MPA_ID";
+    private static final String NAME = "NAME";
+    private static final String DESCRIPTION = "DESCRIPTION";
     private final JdbcTemplate jdbcTemplate;
 
     public DBMpaStorage(JdbcTemplate jdbcTemplate) {
