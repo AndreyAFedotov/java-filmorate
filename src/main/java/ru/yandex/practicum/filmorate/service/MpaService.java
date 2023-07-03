@@ -22,17 +22,15 @@ public class MpaService {
         List<Mpa> mpas = mpaStorage.getMpas();
         if (mpas.isEmpty()) {
             throw new NotFoundException("MPA отсутствуют");
-        } else {
-            return mpas;
         }
+        return mpas;
     }
 
     public Mpa getMpa(long id) {
         Mpa mpa = mpaStorage.getMpa(id);
         if (mpa == null) {
             throw new NotFoundException("Неизвестный MPA: " + id);
-        } else {
-            return mpa;
         }
+        return mpa;
     }
 }

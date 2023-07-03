@@ -26,13 +26,13 @@ import java.util.Set;
 @Primary
 @Slf4j
 public class DBFilmStorage implements FilmStorage {
-    public static final String FILM_ID = "FILM_ID";
-    public static final String MPA_ID = "MPA_ID";
-    public static final String GENRE_ID = "GENRE_ID";
-    public static final String NAME = "NAME";
-    public static final String DESCRIPTION = "DESCRIPTION";
-    public static final String RELEASEDATE = "RELEASEDATE";
-    public static final String DURATION = "DURATION";
+    private static final String FILM_ID = "FILM_ID";
+    private static final String MPA_ID = "MPA_ID";
+    private static final String GENRE_ID = "GENRE_ID";
+    private static final String NAME = "NAME";
+    private static final String DESCRIPTION = "DESCRIPTION";
+    private static final String RELEASEDATE = "RELEASEDATE";
+    private static final String DURATION = "DURATION";
     private final JdbcTemplate jdbcTemplate;
 
     public DBFilmStorage(JdbcTemplate jdbcTemplate) {
@@ -155,7 +155,7 @@ public class DBFilmStorage implements FilmStorage {
                     userRows.getInt(DURATION),
                     getMpaDataByMpaId(userRows.getLong(MPA_ID)),
                     getGenresDataForFilm(userRows.getLong(FILM_ID)),
-                    null,
+                    new HashSet<>(),
                     getLikesCount(userRows.getLong(FILM_ID)));
         }
         return null;
@@ -184,7 +184,11 @@ public class DBFilmStorage implements FilmStorage {
                 "left join GENRES AS g ON g.GENRE_ID = f.GENRE_ID " +
                 "where FILM_ID=?";
         List<Genre> genres = (jdbcTemplate.query(sqlQuery, (rs, rowNum) -> makeGenre(rs), id));
-        return new HashSet<>(genres);
+        if (genres.isEmpty()) {
+            return new HashSet<>();
+        } else {
+            return new HashSet<>(genres);
+        }
     }
 
     private Genre makeGenre(ResultSet rs) {

@@ -24,14 +24,14 @@ import java.util.Objects;
 @Primary
 @Slf4j
 public class DBUserStorage implements UserStorage {
-    public static final String USER_ID = "USER_ID";
-    public static final String USER_ONE_ID = "USER_ONE_ID";
-    public static final String USER_TWO_ID = "USER_TWO_ID";
-    public static final String STATUS = "STATUS";
-    public static final String EMAIL = "EMAIL";
-    public static final String LOGIN = "LOGIN";
-    public static final String NAME = "NAME";
-    public static final String BIRTHDAY = "BIRTHDAY";
+    private static final String USER_ID = "USER_ID";
+    private static final String USER_ONE_ID = "USER_ONE_ID";
+    private static final String USER_TWO_ID = "USER_TWO_ID";
+    private static final String STATUS = "STATUS";
+    private static final String EMAIL = "EMAIL";
+    private static final String LOGIN = "LOGIN";
+    private static final String NAME = "NAME";
+    private static final String BIRTHDAY = "BIRTHDAY";
     private final JdbcTemplate jdbcTemplate;
 
     public DBUserStorage(JdbcTemplate jdbcTemplate) {

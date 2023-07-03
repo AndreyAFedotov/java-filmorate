@@ -22,17 +22,15 @@ public class GenreService {
         List<Genre> result = genreStorage.getGenres();
         if (result.isEmpty()) {
             throw new NotFoundException("Жанры отсутствуют");
-        } else {
-            return result;
         }
+        return result;
     }
 
     public Genre getGenre(long id) {
         Genre genre = genreStorage.getGenre(id);
         if (genre == null) {
             throw new NotFoundException("Неизвестный жанр: " + id);
-        } else {
-            return genre;
         }
+        return genre;
     }
 }
