@@ -6,11 +6,12 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.film.InMemoryFilmStorage;
-import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
+import ru.yandex.practicum.filmorate.storage.film.impl.InMemoryFilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
+import ru.yandex.practicum.filmorate.storage.user.impl.InMemoryUserStorage;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
@@ -46,6 +47,7 @@ public class FilmControllerTest {
                 .description(DESCRIPTION)
                 .releaseDate(LocalDate.parse(DATE))
                 .duration(DURATION)
+                .mpa(new Mpa(2, null, null))
                 .build();
         Set<ConstraintViolation<Film>> violations = validator.validate(film);
         assertTrue(violations.isEmpty(), NEED_TRUE);
@@ -59,6 +61,7 @@ public class FilmControllerTest {
                 .description(DESCRIPTION)
                 .releaseDate(LocalDate.parse(DATE))
                 .duration(DURATION)
+                .mpa(new Mpa(2, null, null))
                 .build();
         Set<ConstraintViolation<Film>> violations = validator.validate(film);
         assertFalse(violations.isEmpty(), NEED_FALSE);
@@ -73,6 +76,7 @@ public class FilmControllerTest {
                 .description(DESCRIPTION)
                 .releaseDate(LocalDate.parse(DATE))
                 .duration(DURATION)
+                .mpa(new Mpa(2, null, null))
                 .build();
         Set<ConstraintViolation<Film>> violations = validator.validate(film);
         assertFalse(violations.isEmpty(), NEED_FALSE);
@@ -89,6 +93,7 @@ public class FilmControllerTest {
                         "12345678901234567890123456789012345678901234567890" + "!")
                 .releaseDate(LocalDate.parse(DATE))
                 .duration(DURATION)
+                .mpa(new Mpa(2, null, null))
                 .build();
         Set<ConstraintViolation<Film>> violations = validator.validate(film);
         Assertions.assertFalse(violations.isEmpty(), NEED_FALSE);
@@ -103,6 +108,7 @@ public class FilmControllerTest {
                 .description(DESCRIPTION)
                 .releaseDate(LocalDate.parse(DATE))
                 .duration(-1)
+                .mpa(new Mpa(2, null, null))
                 .build();
         Set<ConstraintViolation<Film>> violations = validator.validate(film);
         assertFalse(violations.isEmpty(), NEED_FALSE);
@@ -117,6 +123,7 @@ public class FilmControllerTest {
                 .description(DESCRIPTION)
                 .releaseDate(LocalDate.parse("1895-12-27"))
                 .duration(DURATION)
+                .mpa(new Mpa(2, null, null))
                 .build();
         FilmStorage filmSt = new InMemoryFilmStorage();
         UserStorage userSt = new InMemoryUserStorage();
