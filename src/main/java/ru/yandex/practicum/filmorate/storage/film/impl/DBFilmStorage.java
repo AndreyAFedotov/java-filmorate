@@ -161,6 +161,14 @@ public class DBFilmStorage implements FilmStorage {
         return null;
     }
 
+    @Override
+    public Film deleteFilm(long id) {
+        Film film = getFilm(id);
+        String sqlQuery = "delete from FILMS where FILM_ID=?";
+        jdbcTemplate.update(sqlQuery, id);
+        return film;
+    }
+
     private Mpa getMpaDataByMpaId(Long id) {
         String sqlQuery = "select NAME, DESCRIPTION from MPAS where MPA_ID=?";
         SqlRowSet userRows = jdbcTemplate.queryForRowSet(sqlQuery, id);

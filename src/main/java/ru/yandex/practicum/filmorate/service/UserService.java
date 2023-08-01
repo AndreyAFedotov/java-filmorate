@@ -42,6 +42,11 @@ public class UserService {
         return userStorage.updateUser(user);
     }
 
+    public User deleteUser(long id) {
+        checkUserIsExist(id);
+        return userStorage.deleteUser(id);
+    }
+
     public User addToFriends(long id, long friendId) {
         checkUserIsExist(id);
         checkUserIsExist(friendId);

@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS FILMS
     description varchar(200),
     releaseDate timestamp NOT NULL,
     duration int,
-    CONSTRAINT fk_mpa FOREIGN KEY(mpa_id) REFERENCES mpas(mpa_id),
+    CONSTRAINT fk_mpa FOREIGN KEY(mpa_id) REFERENCES MPAS(mpa_id) ON DELETE CASCADE,
     CONSTRAINT ck_duration CHECK (duration > 0)
 );
 
@@ -37,8 +37,8 @@ CREATE TABLE IF NOT EXISTS FILMS_GENRES
     film_id int NOT NULL,
     genre_id int NOT NULL,
     PRIMARY KEY (film_id, genre_id),
-    CONSTRAINT fk_film FOREIGN KEY(film_id) REFERENCES films(film_id),
-    CONSTRAINT fk_genre FOREIGN KEY(genre_id) REFERENCES genres(genre_id)
+    CONSTRAINT fk_film FOREIGN KEY(film_id) REFERENCES FILMS(film_id) ON DELETE CASCADE ,
+    CONSTRAINT fk_genre FOREIGN KEY(genre_id) REFERENCES GENRES(genre_id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS FRIENDSHIPS
@@ -47,8 +47,8 @@ CREATE TABLE IF NOT EXISTS FRIENDSHIPS
     user_two_id int NOT NULL,
     status int NOT NULL,
     PRIMARY KEY (user_one_id, user_two_id),
-    CONSTRAINT fk_user_one FOREIGN KEY(user_one_id) REFERENCES users(user_id),
-    CONSTRAINT fk_user_two FOREIGN KEY(user_two_id) REFERENCES users(user_id),
+    CONSTRAINT fk_user_one FOREIGN KEY(user_one_id) REFERENCES USERS(user_id) ON DELETE CASCADE,
+    CONSTRAINT fk_user_two FOREIGN KEY(user_two_id) REFERENCES USERS(user_id) ON DELETE CASCADE,
     CONSTRAINT ck_status CHECK (status IN (0,1))
 );
 
@@ -57,6 +57,6 @@ CREATE TABLE IF NOT EXISTS FILMS_LIKES
     film_id int NOT NULL,
     user_id int NOT NULL,
     PRIMARY KEY (film_id, user_id),
-    CONSTRAINT fk_film_id FOREIGN KEY(film_id) REFERENCES films(film_id),
-    CONSTRAINT fk_user_id FOREIGN KEY(user_id) REFERENCES users(user_id)
+    CONSTRAINT fk_film_id FOREIGN KEY(film_id) REFERENCES FILMS(film_id) ON DELETE CASCADE,
+    CONSTRAINT fk_user_id FOREIGN KEY(user_id) REFERENCES USERS(user_id) ON DELETE CASCADE
 );
