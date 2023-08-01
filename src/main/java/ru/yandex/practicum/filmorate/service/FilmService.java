@@ -1,28 +1,32 @@
 package ru.yandex.practicum.filmorate.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.storage.director.DirectorStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class FilmService {
     private static final LocalDate FILM_RELEASE_DATE = LocalDate.of(1895, 12, 28);
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
+    private final DirectorStorage directorStorage;
 
     @Autowired
-    public FilmService(@Qualifier("DBFilmStorage") FilmStorage filmStorage,
-                       @Qualifier("DBUserStorage") UserStorage userStorage) {
+    public FilmService(FilmStorage filmStorage,
+                       UserStorage userStorage,
+                       DirectorStorage directorStorage) {
         this.filmStorage = filmStorage;
         this.userStorage = userStorage;
+        this.directorStorage = directorStorage;
     }
 
     public List<Film> getFilms() {
@@ -83,6 +87,14 @@ public class FilmService {
             throw new NotFoundException("Фильма не существует: " + id);
         } else {
             return filmStorage.getFilm(id);
+        }
+    }
+
+    public List<Film> getDirectorsFilms(long directorId, Set<String> sortBy) {
+        if (!directorStorage.isExists(directorId)) {
+            throw new NotFoundException("Режиссёра не существует: " + directorId);
+        } else {
+            return filmStorage.getDirectorsFilms(directorId, sortBy);
         }
     }
 }
