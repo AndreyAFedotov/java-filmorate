@@ -7,6 +7,7 @@ import ru.yandex.practicum.filmorate.service.FilmService;
 
 import javax.validation.Valid;
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/films")
@@ -58,5 +59,11 @@ public class FilmController {
     @GetMapping("/{id}")
     public Film getFilm(@PathVariable long id) {
         return filmService.getFilm(id);
+    }
+
+    @GetMapping("/director/{directorId}")
+    public List<Film> getDirectorsFilms(@PathVariable long directorId,
+                                        @RequestParam Set<String> sortBy) {
+        return filmService.getDirectorsFilms(directorId, sortBy);
     }
 }
