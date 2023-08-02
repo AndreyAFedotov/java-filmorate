@@ -103,7 +103,7 @@ class FilmStorageTests {
         filmStorage.createFilm(createFilm());
         filmStorage.createFilm(createFilm());
         filmStorage.createFilm(createFilm());
-        List<Film> films = filmStorage.getPopularFilms(2, -1, -1);
+        List<Film> films = filmStorage.getPopularFilms(2, 0, 0);
         assertEquals(2, films.size(), "Ошибка списка популярных");
     }
 
