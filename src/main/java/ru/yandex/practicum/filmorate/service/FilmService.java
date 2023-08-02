@@ -56,6 +56,11 @@ public class FilmService {
         return filmStorage.deleteLikeFromFilm(id, userId);
     }
 
+    public Film deleteFilm(long id) {
+        checkFilmIsExist(id);
+        return filmStorage.deleteFilm(id);
+    }
+
     public void checkFilmIsExist(long id) {
         if (!filmStorage.isExists(id)) {
             throw new NotFoundException("Такого фильма нет в базе: " + id);

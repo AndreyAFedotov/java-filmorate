@@ -25,4 +25,6 @@ public interface FilmStorage {
 
     List<Film> getDirectorsFilms(long directorId, Set<String> sortBy);
 
+
+    Film deleteFilm(long id);
 }

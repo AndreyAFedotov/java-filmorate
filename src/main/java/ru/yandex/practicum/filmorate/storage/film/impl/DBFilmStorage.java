@@ -165,6 +165,14 @@ public class DBFilmStorage implements FilmStorage {
     }
 
     @Override
+    public Film deleteFilm(long id) {
+        Film film = getFilm(id);
+        String sqlQuery = "delete from FILMS where FILM_ID=?";
+        jdbcTemplate.update(sqlQuery, id);
+        return film;
+    }
+
+    @Override
     public List<Film> getDirectorsFilms(long directorId, Set<String> sortBy) {
         boolean likes = false;
         boolean year = false;
