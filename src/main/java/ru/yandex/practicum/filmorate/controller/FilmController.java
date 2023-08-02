@@ -58,6 +58,12 @@ public class FilmController {
         return filmService.getPopularFilms(count, genreId, year);
     }
 
+    @GetMapping("/common")
+    public List<Film> getCommonFilms(@RequestParam long userId,
+                                     @RequestParam long friendId) {
+        return filmService.getCommonFilms(userId, friendId);
+    }
+
     @GetMapping("/{id}")
     public Film getFilm(@PathVariable long id) {
         return filmService.getFilm(id);
