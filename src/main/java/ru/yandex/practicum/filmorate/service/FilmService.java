@@ -74,9 +74,9 @@ public class FilmService {
         }
     }
 
-    public List<Film> getPopularFilms(Integer count) {
+    public List<Film> getPopularFilms(Integer count, Integer genreId, Integer year) {
         if (!filmStorage.getFilms().isEmpty()) {
-            return filmStorage.getPopularFilms(count);
+            return filmStorage.getPopularFilms(count, genreId, year);
         } else {
             throw new NotFoundException("Список фильмов пуст");
         }
