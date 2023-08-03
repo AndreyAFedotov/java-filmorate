@@ -1,5 +1,7 @@
 package ru.yandex.practicum.filmorate.storage.review.impl;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations;
@@ -99,7 +101,7 @@ public class DBReviewStorage implements ReviewStorage {
     }
 
     private void deleteLikeReviewOrDislike(Long reviewId, Long userId) {
-        final String sqlQuery = "delete from USEFUL " +
+        final String sqlQuery = "delete from USEFULS " +
                 "where REVIEW_ID = :reviewId and USER_ID = :userId";
         jdbcOperations.update(sqlQuery, Map.of("reviewId", reviewId,
                 "userId", userId));
@@ -113,7 +115,7 @@ public class DBReviewStorage implements ReviewStorage {
                 Map.of("reviewId", reviewId,
                         "userId", userId),
                 (rs, roNum) -> rs.getBoolean("USEFUL_STATUS"));
-        if (usefulStatus.get(0)) {
+        if (usefulStatus.isEmpty() || usefulStatus.get(0)) {
             throw new NotFoundException("Дизлайк: " + reviewId +
                     " пользователя: " + userId + " не найден");
         }
@@ -125,15 +127,38 @@ public class DBReviewStorage implements ReviewStorage {
         final String sqlQuery = "select REVIEW_ID from REVIEWS where REVIEW_ID = :id";
         List<Long> reviewId = jdbcOperations.query(sqlQuery,
                 Map.of("id", id), ((rs, rowNum) -> rs.getLong("REVIEW_ID")));
-        return reviewId.size() != 0 && reviewId.get(0).equals(id);
+        return !reviewId.isEmpty() && reviewId.get(0).equals(id);
     }
 
     private void putLikeReviewOrDislike(Long reviewId, Long userId, boolean isLike) {
-        String sqlQuery = "insert into USEFULS (REVIEW_ID, USER_ID, USEFUL_STATUS) " +
-                "values (:reviewId, :userId, :usefulStatus)";
-        jdbcOperations.update(sqlQuery, Map.of("reviewId", reviewId,
-                "userId", userId,
-                "usefulStatus", isLike));
+        String sqlQueryUseful = "select REVIEW_ID, USER_ID, USEFUL_STATUS from USEFULS " +
+                "where REVIEW_ID = :reviewId and USER_ID = :userId";
+        List<Useful> usefulList = jdbcOperations.query(sqlQueryUseful,
+                Map.of("reviewId", reviewId, "userId",  userId),
+                (rs, rowNum) -> new Useful(rs.getLong("REVIEW_ID"),
+                        rs.getLong("USER_ID"),
+                        rs.getBoolean("USEFUL_STATUS")));
+        if (usefulList.isEmpty()) {
+            String sqlQuery = "insert into USEFULS (REVIEW_ID, USER_ID, USEFUL_STATUS) " +
+                    "values (:reviewId, :userId, :usefulStatus)";
+            jdbcOperations.update(sqlQuery, Map.of("reviewId", reviewId,
+                    "userId", userId,
+                    "usefulStatus", isLike));
+        } else if (!usefulList.get(0).status.equals(isLike)) {
+            final String updateSqlQuery = "update USEFULS set USEFUL_STATUS = :usefulStatus " +
+                    "where REVIEW_ID = :reviewId and USER_ID = :userId";
+            jdbcOperations.update(updateSqlQuery, Map.of("usefulStatus", isLike,
+                                                            "reviewId", reviewId,
+                                                            "userId", userId));
+        }
+    }
+
+    @AllArgsConstructor
+    @Data
+    private static class Useful {
+        Long reviewId;
+        Long userId;
+        Boolean status;
     }
 
     private MapSqlParameterSource getMapParameter(Review review) {

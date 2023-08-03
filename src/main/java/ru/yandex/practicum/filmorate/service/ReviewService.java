@@ -18,8 +18,7 @@ public class ReviewService {
     private final FilmService filmService;
 
     @Autowired
-    public ReviewService(ReviewStorage reviewStorage, FilmStorage filmStorage,
-                         UserStorage userStorage, FilmService filmService) {
+    public ReviewService(ReviewStorage reviewStorage, FilmService filmService) {
         this.reviewStorage = reviewStorage;
         this.filmService = filmService;
     }
@@ -87,7 +86,7 @@ public class ReviewService {
 
     private void checkReviewIsExist(Long id) {
         if (!reviewStorage.isExists(id)) {
-            throw new NotFoundException("Отзыв отсутсвует: " + id);
+            throw new NotFoundException("Отзыв отсутствует: " + id);
         }
     }
 
