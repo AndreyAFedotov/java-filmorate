@@ -16,6 +16,7 @@ import java.util.Set;
 @Service
 public class FilmService {
     private static final LocalDate FILM_RELEASE_DATE = LocalDate.of(1895, 12, 28);
+    private static final String ERR_USER = "Пользователя не существует: ";
     private final FilmStorage filmStorage;
     private final UserStorage userStorage;
     private final DirectorStorage directorStorage;
@@ -56,6 +57,11 @@ public class FilmService {
         return filmStorage.deleteLikeFromFilm(id, userId);
     }
 
+    public Film deleteFilm(long id) {
+        checkFilmIsExist(id);
+        return filmStorage.deleteFilm(id);
+    }
+
     public void checkFilmIsExist(long id) {
         if (!filmStorage.isExists(id)) {
             throw new NotFoundException("Такого фильма нет в базе: " + id);
@@ -64,7 +70,7 @@ public class FilmService {
 
     public void checkUserIsExist(long id) {
         if (!userStorage.isExists(id)) {
-            throw new NotFoundException("Пользователя не существует: " + id);
+            throw new NotFoundException(ERR_USER + id);
         }
     }
 
@@ -74,9 +80,9 @@ public class FilmService {
         }
     }
 
-    public List<Film> getPopularFilms(Integer count) {
+    public List<Film> getPopularFilms(Integer count, Integer genreId, Integer year) {
         if (!filmStorage.getFilms().isEmpty()) {
-            return filmStorage.getPopularFilms(count);
+            return filmStorage.getPopularFilms(count, genreId, year);
         } else {
             throw new NotFoundException("Список фильмов пуст");
         }
@@ -95,6 +101,16 @@ public class FilmService {
             throw new NotFoundException("Режиссёра не существует: " + directorId);
         } else {
             return filmStorage.getDirectorsFilms(directorId, sortBy);
+        }
+    }
+
+    public List<Film> getCommonFilms(long userId, long friendId) {
+        if (!userStorage.isExists(userId)) {
+            throw new NotFoundException(ERR_USER + userId);
+        } else if (!userStorage.isExists(friendId)) {
+            throw new NotFoundException(ERR_USER + friendId);
+        } else {
+            return filmStorage.getCommonFilms(userId, friendId);
         }
     }
 }

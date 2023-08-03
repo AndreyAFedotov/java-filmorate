@@ -72,8 +72,8 @@ CREATE TABLE IF NOT EXISTS FILMS_LIKES
     film_id int NOT NULL,
     user_id int NOT NULL,
     PRIMARY KEY (film_id, user_id),
-    CONSTRAINT fk_film_id FOREIGN KEY(film_id) REFERENCES films(film_id),
-    CONSTRAINT fk_user_id FOREIGN KEY(user_id) REFERENCES users(user_id)
+    CONSTRAINT fk_film_id FOREIGN KEY(film_id) REFERENCES FILMS(film_id) ON DELETE CASCADE,
+    CONSTRAINT fk_user_id FOREIGN KEY(user_id) REFERENCES USERS(user_id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS REVIEWS

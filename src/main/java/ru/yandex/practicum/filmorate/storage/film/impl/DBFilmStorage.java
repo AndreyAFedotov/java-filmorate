@@ -8,6 +8,7 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.SQLWorkException;
+import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
@@ -132,14 +133,63 @@ public class DBFilmStorage implements FilmStorage {
     }
 
     @Override
-    public List<Film> getPopularFilms(Integer count) {
-        String sqlQuery = "select F.FILM_ID, F.MPA_ID, F.NAME, F.DESCRIPTION, F.RELEASEDATE, F.DURATION, " +
-                "COUNT (L.USER_ID) as CNT from FILMS as F " +
-                "left join FILMS_LIKES L on F.FILM_ID = L.FILM_ID " +
-                "group by F.FILM_ID " +
-                "order by CNT desc " +
-                "limit ?;";
-        List<Film> films = jdbcTemplate.query(sqlQuery, (rs, rowNum) -> makeFilm(rs), count);
+    public List<Film> getPopularFilms(Integer count, Integer genreId, Integer year) {
+        String sqlQuery;
+        List<Film> films = new ArrayList<>();
+
+        if (genreId == 0 && year == 0) {
+            log.info("Фильтрация популярных фильмов без параметров");
+            sqlQuery = "SELECT F.FILM_ID, F.MPA_ID, F.NAME, F.DESCRIPTION, F.RELEASEDATE, F.DURATION, " +
+                    "COUNT (L.USER_ID) as CNT from FILMS as F " +
+                    "LEFT JOIN FILMS_LIKES L on F.FILM_ID = L.FILM_ID " +
+                    "GROUP BY F.FILM_ID " +
+                    "ORDER BY CNT desc " +
+                    "LIMIT ?";
+            films = jdbcTemplate.query(sqlQuery, (rs, rowNum) -> makeFilm(rs), count);
+        }
+        if (genreId > 0 && year == 0) {
+            log.info("Фильтрация популярных фильмов по жанрам");
+            sqlQuery = "SELECT F.FILM_ID, F.MPA_ID, F.NAME, F.DESCRIPTION, F.RELEASEDATE, F.DURATION, "
+                    + "COUNT (L.USER_ID) as CNT FROM FILMS as F "
+                    + "LEFT JOIN FILMS_LIKES L on F.FILM_ID = L.FILM_ID "
+                    + "LEFT JOIN FILMS_GENRES FG on F.FILM_ID = FG.FILM_ID "
+                    + "WHERE FG.GENRE_ID=? "
+                    + "GROUP BY F.FILM_ID, FG.GENRE_ID "
+                    + "ORDER BY CNT DESC "
+                    + "LIMIT ?";
+            films = jdbcTemplate.query(sqlQuery, (rs, rowNum) -> makeFilm(rs), genreId, count);
+        }
+        if (genreId == 0 && year > 0) {
+            log.info("Фильтрация популярных фильмов по годам");
+            sqlQuery = "SELECT F.FILM_ID, F.MPA_ID, F.NAME, F.DESCRIPTION, F.RELEASEDATE, F.DURATION, "
+                    + "COUNT(L.USER_ID) as CNT FROM FILMS as F "
+                    + "LEFT JOIN FILMS_LIKES L on F.FILM_ID = L.FILM_ID "
+                    + "WHERE EXTRACT(YEAR FROM F.RELEASEDATE)=? "
+                    + "GROUP BY F.FILM_ID "
+                    + "ORDER BY CNT DESC "
+                    + "LIMIT ?";
+            films = jdbcTemplate.query(sqlQuery, (rs, rowNum) -> makeFilm(rs), year, count);
+        }
+        if (genreId > 0 && year > 0) {
+            log.info("Фильтрация популярных фильмов по жанрам и годам");
+            sqlQuery = "SELECT F.FILM_ID, F.MPA_ID, F.NAME, F.DESCRIPTION, F.RELEASEDATE, F.DURATION, "
+                    + "COUNT (L.USER_ID) as CNT from FILMS as F "
+                    + "LEFT JOIN FILMS_LIKES L on F.FILM_ID = L.FILM_ID "
+                    + "LEFT JOIN FILMS_GENRES FG on F.FILM_ID = FG.FILM_ID "
+                    + "WHERE FG.GENRE_ID=? "
+                    + "AND EXTRACT(YEAR FROM F.RELEASEDATE)=? "
+                    + "GROUP BY F.FILM_ID, FG.GENRE_ID "
+                    + "ORDER BY CNT DESC "
+                    + "LIMIT ?";
+            films = jdbcTemplate.query(sqlQuery, (rs, rowNum) -> makeFilm(rs), genreId, year,
+                    count);
+        }
+        if (genreId < 0 && year < 0) {
+            throw new ValidationException(String.format(
+                    "Неверные параметры фильтрации популярных фильмов"
+                            + " genreId = %d and year = %d.", genreId, year));
+        }
+
         for (Film film : films) {
             setAdvFilmData(film);
         }
@@ -162,6 +212,27 @@ public class DBFilmStorage implements FilmStorage {
                     getLikesCount(userRows.getLong(FILM_ID)));
         }
         return null;
+    }
+
+    @Override
+    public Film deleteFilm(long id) {
+        Film film = getFilm(id);
+        String sqlQuery = "delete from FILMS where FILM_ID=?";
+        jdbcTemplate.update(sqlQuery, id);
+        return film;
+    }
+
+    @Override
+    public List<Film> getCommonFilms(long userId, long friendId) {
+        String sqlQuery = "select f.FILM_ID, f.MPA_ID, f.NAME, f.DESCRIPTION, f.RELEASEDATE, f.DURATION " +
+                "from FILMS as f " +
+                "inner join FILMS_LIKES as l1 ON f.FILM_ID = l1.FILM_ID and l1.USER_ID = ? " +
+                "inner join FILMS_LIKES as l2 ON l1.FILM_ID = l2.FILM_ID and l2.USER_ID = ? ";
+        List<Film> result = jdbcTemplate.query(sqlQuery, (rs, rowNum) -> makeFilm(rs), userId, friendId);
+        for (Film film : result) {
+            setAdvFilmData(film);
+        }
+        return result;
     }
 
     @Override
