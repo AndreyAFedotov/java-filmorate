@@ -5,9 +5,7 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Review;
-import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.review.ReviewStorage;
-import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.util.List;
 
@@ -18,8 +16,7 @@ public class ReviewService {
     private final FilmService filmService;
 
     @Autowired
-    public ReviewService(ReviewStorage reviewStorage, FilmStorage filmStorage,
-                         UserStorage userStorage, FilmService filmService) {
+    public ReviewService(ReviewStorage reviewStorage, FilmService filmService) {
         this.reviewStorage = reviewStorage;
         this.filmService = filmService;
     }
@@ -87,7 +84,7 @@ public class ReviewService {
 
     private void checkReviewIsExist(Long id) {
         if (!reviewStorage.isExists(id)) {
-            throw new NotFoundException("Отзыв отсутсвует: " + id);
+            throw new NotFoundException("Отзыв отсутствует: " + id);
         }
     }
 
