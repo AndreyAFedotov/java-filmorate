@@ -62,7 +62,7 @@ public class DBReviewStorage implements ReviewStorage {
                 "left join USEFULS as U on R.REVIEW_ID = U.REVIEW_ID " +
                 "where R.REVIEW_ID = :reviewId group by R.REVIEW_ID";
         List<Review> reviews = jdbcOperations.query(sqlQuery,Map.of("reviewId", reviewId), reviewRowMapper);
-        if(reviews.size() != 1) return null;
+        if (reviews.size() != 1) return null;
         return reviews.get(0);
     }
 
@@ -98,7 +98,7 @@ public class DBReviewStorage implements ReviewStorage {
         deleteLikeReviewOrDislike(reviewId,userId);
     }
 
-    private void deleteLikeReviewOrDislike(Long reviewId, Long userId){
+    private void deleteLikeReviewOrDislike(Long reviewId, Long userId) {
         final String sqlQuery = "delete from USEFUL " +
                 "where REVIEW_ID = :reviewId and USER_ID = :userId";
         jdbcOperations.update(sqlQuery, Map.of("reviewId", reviewId,
@@ -109,11 +109,11 @@ public class DBReviewStorage implements ReviewStorage {
     public void deleteDislikeReview(Long reviewId, Long userId) {
         final String sqlQuery = "select USEFUL_STATUS FROM USEFULS " +
                 "where REVIEW_ID = :reviewId and USER_ID = :userId";
-        List<Boolean> useful_status = jdbcOperations.query(sqlQuery,
+        List<Boolean> usefulStatus = jdbcOperations.query(sqlQuery,
                 Map.of("reviewId", reviewId,
                         "userId", userId),
                 (rs, roNum) -> rs.getBoolean("USEFUL_STATUS"));
-        if (useful_status.get(0)){
+        if (usefulStatus.get(0)) {
             throw new NotFoundException("Дизлайк: " + reviewId +
                     " пользователя: " + userId + " не найден");
         }
@@ -128,7 +128,7 @@ public class DBReviewStorage implements ReviewStorage {
         return reviewId.size() != 0 && reviewId.get(0).equals(id);
     }
 
-    private void putLikeReviewOrDislike(Long reviewId, Long userId, boolean isLike){
+    private void putLikeReviewOrDislike(Long reviewId, Long userId, boolean isLike) {
         String sqlQuery = "insert into USEFULS (REVIEW_ID, USER_ID, USEFUL_STATUS) " +
                 "values (:reviewId, :userId, :usefulStatus)";
         jdbcOperations.update(sqlQuery, Map.of("reviewId", reviewId,
@@ -158,7 +158,7 @@ public class DBReviewStorage implements ReviewStorage {
                 Map.of("count", count), reviewRowMapper);
     }
 
-    private static class ReviewRowMapper implements RowMapper<Review>{
+    private static class ReviewRowMapper implements RowMapper<Review> {
 
         @Override
         public Review mapRow(ResultSet rs, int rowNum) throws SQLException {
