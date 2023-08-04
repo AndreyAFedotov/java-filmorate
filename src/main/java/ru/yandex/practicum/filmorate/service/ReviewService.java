@@ -4,8 +4,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
-import ru.yandex.practicum.filmorate.model.EventEnums.EventOperation;
-import ru.yandex.practicum.filmorate.model.EventEnums.EventType;
+import ru.yandex.practicum.filmorate.model.enums.EventOperation;
+import ru.yandex.practicum.filmorate.model.enums.EventType;
 import ru.yandex.practicum.filmorate.model.Review;
 import ru.yandex.practicum.filmorate.storage.event.EventStorage;
 import ru.yandex.practicum.filmorate.storage.review.ReviewStorage;
@@ -46,7 +46,8 @@ public class ReviewService {
         } else {
             Review newReview = reviewStorage.updateReview(review);
             Review oldReview = reviewStorage.getReviewById(review.getReviewId());
-            eventStorage.addEvent(oldReview.getUserId(), EventType.REVIEW, EventOperation.UPDATE, oldReview.getReviewId());
+            eventStorage.addEvent(oldReview.getUserId(),
+                    EventType.REVIEW, EventOperation.UPDATE, oldReview.getReviewId());
             return newReview;
         }
     }

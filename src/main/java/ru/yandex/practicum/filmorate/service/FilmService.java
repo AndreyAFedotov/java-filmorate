@@ -4,8 +4,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
-import ru.yandex.practicum.filmorate.model.EventEnums.EventOperation;
-import ru.yandex.practicum.filmorate.model.EventEnums.EventType;
+import ru.yandex.practicum.filmorate.model.enums.EventOperation;
+import ru.yandex.practicum.filmorate.model.enums.EventType;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.director.DirectorStorage;
 import ru.yandex.practicum.filmorate.storage.event.EventStorage;
@@ -28,7 +28,8 @@ public class FilmService {
     @Autowired
     public FilmService(FilmStorage filmStorage,
                        UserStorage userStorage,
-                       DirectorStorage directorStorage, EventStorage eventStorage) {
+                       DirectorStorage directorStorage,
+                       EventStorage eventStorage) {
         this.filmStorage = filmStorage;
         this.userStorage = userStorage;
         this.directorStorage = directorStorage;

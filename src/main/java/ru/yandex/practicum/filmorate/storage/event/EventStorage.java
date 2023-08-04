@@ -1,8 +1,8 @@
 package ru.yandex.practicum.filmorate.storage.event;
 
 import ru.yandex.practicum.filmorate.model.Event;
-import ru.yandex.practicum.filmorate.model.EventEnums.EventOperation;
-import ru.yandex.practicum.filmorate.model.EventEnums.EventType;
+import ru.yandex.practicum.filmorate.model.enums.EventOperation;
+import ru.yandex.practicum.filmorate.model.enums.EventType;
 
 import java.util.List;
 
