@@ -4,7 +4,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
+import ru.yandex.practicum.filmorate.model.EventEnums.EventOperation;
+import ru.yandex.practicum.filmorate.model.EventEnums.EventType;
 import ru.yandex.practicum.filmorate.model.Review;
+import ru.yandex.practicum.filmorate.storage.event.EventStorage;
 import ru.yandex.practicum.filmorate.storage.review.ReviewStorage;
 
 import java.util.List;
@@ -14,11 +17,13 @@ public class ReviewService {
 
     private final ReviewStorage reviewStorage;
     private final FilmService filmService;
+    private final EventStorage eventStorage;
 
     @Autowired
-    public ReviewService(ReviewStorage reviewStorage, FilmService filmService) {
+    public ReviewService(ReviewStorage reviewStorage, FilmService filmService, EventStorage eventStorage) {
         this.reviewStorage = reviewStorage;
         this.filmService = filmService;
+        this.eventStorage = eventStorage;
     }
 
     public Review createReview(Review review) {
@@ -27,7 +32,9 @@ public class ReviewService {
         if (review.getContent() == null) {
             throw new ValidationException("Отзыв не может быть пустой");
         } else {
-            return reviewStorage.createReview(review);
+            Review newReview = reviewStorage.createReview(review);
+            eventStorage.addEvent(newReview.getUserId(), EventType.REVIEW, EventOperation.ADD, newReview.getReviewId());
+            return newReview;
         }
     }
 
@@ -37,13 +44,18 @@ public class ReviewService {
         if (review.getContent() == null) {
             throw new ValidationException("Отзыв не может быть пустой");
         } else {
-            return reviewStorage.updateReview(review);
+            Review newReview = reviewStorage.updateReview(review);
+            Review oldReview = reviewStorage.getReviewById(review.getReviewId());
+            eventStorage.addEvent(oldReview.getUserId(), EventType.REVIEW, EventOperation.UPDATE, oldReview.getReviewId());
+            return newReview;
         }
     }
 
     public void deleteReviewById(Long reviewId) {
         checkReviewIsExist(reviewId);
+        Review delReview = reviewStorage.getReviewById(reviewId);
         reviewStorage.deleteReviewById(reviewId);
+        eventStorage.addEvent(delReview.getUserId(), EventType.REVIEW, EventOperation.REMOVE, delReview.getReviewId());
     }
 
     public Review getReviewById(Long reviewId) {
