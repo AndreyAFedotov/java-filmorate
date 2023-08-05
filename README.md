@@ -1,3 +1,2 @@
 # ER-схема
-
-![ER-схема](er_filmorate.png) 
+![ER-схема](..%2F..%2FDownloads%2Fer_filmorate.png)
