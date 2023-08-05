@@ -310,6 +310,33 @@ public class DBFilmStorage implements FilmStorage {
         return result;
     }
 
+    @Override
+    public List<Film> getRecommendationsByUserId(long id) {
+        final String sqlQuery = "select distinct FILM_ID " +
+                                "from FILMS_LIKES " +
+                                "where FILM_ID not in (select FILM_ID " +
+                                        "from FILMS_LIKES " +
+                                        "where USER_ID = ?) " +
+                                "and USER_ID in (select USER_ID " +
+                                        "from (select USER_ID, COUNT(FILM_ID) as COUNT_FILM " +
+                                        "from FILMS_LIKES " +
+                                        "where USER_ID != ? and FILM_ID in (select FILM_ID " +
+                                                "from FILMS_LIKES " +
+                                                "where  FILM_ID  in (select FILM_ID " +
+                                                        "from FILMS_LIKES " +
+                                                        "where USER_ID = ?)) " +
+                                        "group by USER_ID) as CF " +
+                                "where COUNT_FILM = (select MAX(COUNT_FILM)))";
+        List<Long> filmIds = jdbcTemplate.query(sqlQuery, (rs, rowNum) -> makeFilmId(rs), id, id, id);
+        final String inSql = String.join(",", Collections.nCopies(filmIds.size(), "?"));
+        final String sqlQueryGetFilms = String.format("select * from FILMS where FILM_ID in (%s)", inSql);
+        List<Film> films = jdbcTemplate.query(sqlQueryGetFilms, (rs, rowNum) -> makeFilm(rs), filmIds.toArray());
+        for (Film film : films) {
+            setAdvFilmData(film);
+        }
+        return films;
+    }
+
     private Set<Long> getFilmsIdsForDirector(long directorId) {
         String sqlQuery = "select FILM_ID from FILMS_DIRECTORS where DIRECTOR_ID=?";
         List<Long> films = (jdbcTemplate.query(sqlQuery, (rs, rowNum) -> makeFilmId(rs), directorId));
