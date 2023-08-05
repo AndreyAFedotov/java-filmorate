@@ -2,17 +2,19 @@ package ru.yandex.practicum.filmorate.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.exception.IncorrectParameterException;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
-import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.enums.EventOperation;
 import ru.yandex.practicum.filmorate.model.enums.EventType;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.director.DirectorStorage;
 import ru.yandex.practicum.filmorate.storage.event.EventStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -122,7 +124,10 @@ public class FilmService {
         }
     }
 
-    public List<Film> getFilmsBySearch(String query, String by) {
-        return filmStorage.getFilmsBySearch(query, by);
+    public Collection<Film> getFilmsBySearch(String query, String by)
+            throws IncorrectParameterException {
+        String queryResult = query.toLowerCase().trim();
+        String byResult = by.toLowerCase().trim();
+        return filmStorage.getFilmsBySearch(queryResult, byResult);
     }
 }

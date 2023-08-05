@@ -6,6 +6,7 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 
 import javax.validation.Valid;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -76,8 +77,9 @@ public class FilmController {
     }
 
     @GetMapping("/search")
-    public List<Film> getFilmsBySearch(@RequestParam(defaultValue = "") String query,
-                                       @RequestParam(defaultValue = "") String by) {
+    public Collection<Film> getFilmsBySearch(
+            @RequestParam(defaultValue = "") String query,
+            @RequestParam(defaultValue = "") String by) {
         return filmService.getFilmsBySearch(query, by);
     }
 }
