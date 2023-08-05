@@ -279,7 +279,7 @@ public class DBFilmStorage implements FilmStorage {
         boolean title = false;
 
         String modQuery = "%" + query + "%";
-        String sqlQuery = "SELECT f.film_id, mpa_id, f.name, f.description, f.releaseDate, f.duration, " +
+        String sqlQuery = "SELECT f.film_id, f.mpa_id, f.name, f.description, f.releaseDate, f.duration, " +
                 "COUNT(DISTINCT fl.user_id) AS amount_likes " +
                 "FROM FILMS AS f " +
                 "LEFT JOIN FILMS_LIKES AS fl ON f.film_id = fl.film_id " +
@@ -308,6 +308,33 @@ public class DBFilmStorage implements FilmStorage {
             setAdvFilmData(film);
         }
         return result;
+    }
+
+    @Override
+    public List<Film> getRecommendationsByUserId(long id) {
+        final String sqlQuery = "select distinct FILM_ID " +
+                                "from FILMS_LIKES " +
+                                "where FILM_ID not in (select FILM_ID " +
+                                         "from FILMS_LIKES " +
+                                         "where USER_ID = ?) " +
+                                "and USER_ID in (select USER_ID " +
+                                        "from (select USER_ID, COUNT(FILM_ID) as COUNT_FILM " +
+                                                "from FILMS_LIKES " +
+                                                "where USER_ID != ? and FILM_ID in (select FILM_ID " +
+                                                        "from FILMS_LIKES " +
+                                                        "where  FILM_ID  in (select FILM_ID " +
+                                                                "from FILMS_LIKES " +
+                                                                "where USER_ID = ?)) " +
+                                                        "group by USER_ID) as CF " +
+                                "where COUNT_FILM = (select MAX(COUNT_FILM)))";
+        List<Long> filmIds = jdbcTemplate.query(sqlQuery, (rs, rowNum) -> makeFilmId(rs), id, id, id);
+        final String inSql = String.join(",", Collections.nCopies(filmIds.size(), "?"));
+        final String sqlQueryGetFilms = String.format("select * from FILMS where FILM_ID in (%s)", inSql);
+        List<Film> films = jdbcTemplate.query(sqlQueryGetFilms, (rs, rowNum) -> makeFilm(rs), filmIds.toArray());
+        for (Film film : films) {
+            setAdvFilmData(film);
+        }
+        return films;
     }
 
     private Set<Long> getFilmsIdsForDirector(long directorId) {
