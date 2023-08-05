@@ -279,7 +279,7 @@ public class DBFilmStorage implements FilmStorage {
         boolean title = false;
 
         String modQuery = "%" + query + "%";
-        String sqlQuery = "SELECT f.film_id, mpa_id, f.name, f.description, f.releaseDate, f.duration, " +
+        String sqlQuery = "SELECT f.film_id, f.mpa_id, f.name, f.description, f.releaseDate, f.duration, " +
                 "COUNT(DISTINCT fl.user_id) AS amount_likes " +
                 "FROM FILMS AS f " +
                 "LEFT JOIN FILMS_LIKES AS fl ON f.film_id = fl.film_id " +
