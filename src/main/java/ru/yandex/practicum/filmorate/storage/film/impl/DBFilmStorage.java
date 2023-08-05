@@ -35,15 +35,6 @@ public class DBFilmStorage implements FilmStorage {
     private static final String RELEASEDATE = "RELEASEDATE";
     private static final String DURATION = "DURATION";
     private final JdbcTemplate jdbcTemplate;
-    private static final String SQL_SEARCH_FILM = "SELECT f.film_id, mpa_id, f.name, f.description," +
-            " f.releaseDate, f.duration, COUNT(DISTINCT fl.user_id) AS amount_likes" +
-            " FROM FILMS AS f " +
-            " LEFT JOIN FILMS_LIKES AS fl ON f.film_id = fl.film_id " +
-            " LEFT JOIN FILMS_DIRECTORS AS fd ON fd.film_id = f.film_id " +
-            " LEFT JOIN DIRECTORS AS d ON d.director_id = fd.director_id " +
-            " WHERE %s " +
-            " GROUP BY f.film_id " +
-            " ORDER BY amount_likes DESC";
 
     public DBFilmStorage(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
@@ -281,6 +272,44 @@ public class DBFilmStorage implements FilmStorage {
         }
     }
 
+    @Override
+    public List<Film> getFilmsBySearch(String query, String by) {
+        List<Film> result = new ArrayList<>();
+        boolean director = false;
+        boolean title = false;
+
+        String modQuery = "%" + query + "%";
+        String sqlQuery = "SELECT f.film_id, mpa_id, f.name, f.description, f.releaseDate, f.duration, " +
+                "COUNT(DISTINCT fl.user_id) AS amount_likes " +
+                "FROM FILMS AS f " +
+                "LEFT JOIN FILMS_LIKES AS fl ON f.film_id = fl.film_id " +
+                "LEFT JOIN FILMS_DIRECTORS AS fd ON fd.film_id = f.film_id " +
+                "LEFT JOIN DIRECTORS AS d ON d.director_id = fd.director_id " +
+                "WHERE %s " +
+                "GROUP BY f.film_id ORDER BY amount_likes DESC";
+        for (String str : by.split(",")) {
+            if (str.equals("director")) {
+                director = true;
+            } else if (str.equals("title")) {
+                title = true;
+            }
+        }
+        if (title && director) {
+            sqlQuery = String.format(sqlQuery, "f.NAME ILIKE ? or d.NAME ILIKE ? ");
+            result = jdbcTemplate.query(sqlQuery, (rs, rowNum) -> makeFilm(rs), modQuery, modQuery);
+        } else if (director) {
+            sqlQuery = String.format(sqlQuery, "d.NAME ILIKE ? ");
+            result = jdbcTemplate.query(sqlQuery, (rs, rowNum) -> makeFilm(rs), modQuery);
+        } else if (title) {
+            sqlQuery = String.format(sqlQuery, "f.NAME ILIKE ?");
+            result = jdbcTemplate.query(sqlQuery, (rs, rowNum) -> makeFilm(rs), modQuery);
+        }
+        for (Film film : result) {
+            setAdvFilmData(film);
+        }
+        return result;
+    }
+
     private Set<Long> getFilmsIdsForDirector(long directorId) {
         String sqlQuery = "select FILM_ID from FILMS_DIRECTORS where DIRECTOR_ID=?";
         List<Long> films = (jdbcTemplate.query(sqlQuery, (rs, rowNum) -> makeFilmId(rs), directorId));
@@ -408,30 +437,5 @@ public class DBFilmStorage implements FilmStorage {
         film.setGenres(getGenresDataForFilm(film.getId()));
         film.setLikesCount(getLikesCount(film.getId()));
         film.setDirectors(getDirectorsForFilm(film.getId()));
-    }
-
-    @Override
-    public Collection<Film> getFilmsBySearch(String query, String by) {
-        if (by.contains("director") && by.contains("title")) {
-            String formattedSql = String.format(SQL_SEARCH_FILM,
-                    "REPLACE (LOWER (f.name), ' ', '') LIKE ? " +
-                            "OR REPLACE (LOWER (d.name), ' ', '') LIKE ? ");
-            return jdbcTemplate.query(formattedSql,
-                    (rs, rowNum) -> makeFilm(rs), "%%" + query + "%%",
-                    "%%" + query + "%%");
-        }
-        if (by.equals("director")) {
-            String formattedSql = String.format(SQL_SEARCH_FILM,
-                    "REPLACE (LOWER (d.name), ' ', '') LIKE ? ");
-            return jdbcTemplate.query(formattedSql,
-                    (rs, rowNum) -> makeFilm(rs), "%%" + query + "%%");
-        }
-        if (by.equals("title")) {
-            String formattedSql = String.format(SQL_SEARCH_FILM,
-                    "REPLACE (LOWER (f.name), ' ', '') LIKE ? ");
-            return jdbcTemplate.query(formattedSql,
-                    (rs, rowNum) -> makeFilm(rs), "%%" + query + "%%");
-        }
-        return List.of();
     }
 }
