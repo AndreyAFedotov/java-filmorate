@@ -29,27 +29,19 @@ public class ReviewService {
     public Review createReview(Review review) {
         checkUserAndFilm(review.getFilmId(), review.getUserId());
         checkPositive(review.getIsPositive());
-        if (review.getContent() == null) {
-            throw new ValidationException("Отзыв не может быть пустой");
-        } else {
-            Review newReview = reviewStorage.createReview(review);
-            eventStorage.addEvent(newReview.getUserId(), EventType.REVIEW, EventOperation.ADD, newReview.getReviewId());
-            return newReview;
-        }
+        Review newReview = reviewStorage.createReview(review);
+        eventStorage.addEvent(newReview.getUserId(), EventType.REVIEW, EventOperation.ADD, newReview.getReviewId());
+        return newReview;
     }
 
     public Review updateReview(Review review) {
         checkPositive(review.getIsPositive());
         checkReviewIsExist(review.getReviewId());
-        if (review.getContent() == null) {
-            throw new ValidationException("Отзыв не может быть пустой");
-        } else {
-            Review newReview = reviewStorage.updateReview(review);
-            Review oldReview = reviewStorage.getReviewById(review.getReviewId());
-            eventStorage.addEvent(oldReview.getUserId(),
-                    EventType.REVIEW, EventOperation.UPDATE, oldReview.getReviewId());
-            return newReview;
-        }
+        Review newReview = reviewStorage.updateReview(review);
+        Review oldReview = reviewStorage.getReviewById(review.getReviewId());
+        eventStorage.addEvent(oldReview.getUserId(),
+                EventType.REVIEW, EventOperation.UPDATE, oldReview.getReviewId());
+        return newReview;
     }
 
     public void deleteReviewById(Long reviewId) {

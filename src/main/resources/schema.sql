@@ -82,7 +82,9 @@ CREATE TABLE IF NOT EXISTS REVIEWS
     content varchar(255),
     positive boolean,
     user_id int NOT NULL,
-    film_id int NOT NULL
+    film_id int NOT NULL,
+    CONSTRAINT fk_film_i FOREIGN KEY(film_id) REFERENCES FILMS(film_id) ON DELETE CASCADE,
+    CONSTRAINT fk_user_i FOREIGN KEY(user_id) REFERENCES USERS(user_id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS USEFULS

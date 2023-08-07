@@ -356,13 +356,7 @@ public class DBFilmStorage implements FilmStorage {
                                                         "group by USER_ID) as CF " +
                                 "where COUNT_FILM = (select MAX(COUNT_FILM)))";
         List<Long> filmIds = jdbcTemplate.query(sqlQuery, (rs, rowNum) -> makeFilmId(rs), id, id, id);
-        final String inSql = String.join(",", Collections.nCopies(filmIds.size(), "?"));
-        final String sqlQueryGetFilms = String.format("select * from FILMS where FILM_ID in (%s)", inSql);
-        List<Film> films = jdbcTemplate.query(sqlQueryGetFilms, (rs, rowNum) -> makeFilm(rs), filmIds.toArray());
-        for (Film film : films) {
-            setAdvFilmData(film);
-        }
-        return films;
+        return getFilmsByIds(filmIds);
     }
 
     private Set<Long> getFilmsIdsForDirector(long directorId) {
