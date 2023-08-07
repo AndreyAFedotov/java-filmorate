@@ -249,13 +249,17 @@ public class DBFilmStorage implements FilmStorage {
 
     @Override
     public List<Film> getCommonFilms(long userId, long friendId) {
-        String sqlQuery = "select f.FILM_ID, f.MPA_ID, f.NAME, f.DESCRIPTION, f.RELEASEDATE, f.DURATION " +
+        String sqlQuery = "select f.FILM_ID, f.MPA_ID, f.NAME, f.DESCRIPTION, f.RELEASEDATE, f.DURATION, " +
+                "m.NAME AS MPA_NAME, m.DESCRIPTION as MPA_DESCRIPTION, count(flc.USER_ID) as CNT " +
                 "from FILMS as f " +
                 "inner join FILMS_LIKES as l1 ON f.FILM_ID = l1.FILM_ID and l1.USER_ID = ? " +
-                "inner join FILMS_LIKES as l2 ON l1.FILM_ID = l2.FILM_ID and l2.USER_ID = ? ";
-        List<Film> result = jdbcTemplate.query(sqlQuery, (rs, rowNum) -> makeFilm(rs), userId, friendId);
+                "inner join FILMS_LIKES as l2 ON l1.FILM_ID = l2.FILM_ID and l2.USER_ID = ? " +
+                "left join MPAS as m ON m.MPA_ID = f.MPA_ID " +
+                "left join FILMS_LIKES as flc ON flc.FILM_ID = f.FILM_ID " +
+                "group by f.FILM_ID";
+        List<Film> result = jdbcTemplate.query(sqlQuery, (rs, rowNum) -> makeFilmOptimized(rs), userId, friendId);
         for (Film film : result) {
-            setAdvFilmData(film);
+            setAdvFilmDataLow(film);
         }
         return result;
     }
