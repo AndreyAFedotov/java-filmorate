@@ -3,6 +3,9 @@ package ru.yandex.practicum.filmorate.storage.film.impl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
@@ -31,21 +34,41 @@ public class DBFilmStorage implements FilmStorage {
     private static final String GENRE_ID = "GENRE_ID";
     private static final String DIRECTOR_ID = "DIRECTOR_ID";
     private static final String NAME = "NAME";
+    private static final String MPA_NAME = "MPA_NAME";
     private static final String DESCRIPTION = "DESCRIPTION";
+    private static final String MPA_DESCRIPTION = "MPA_DESCRIPTION";
     private static final String RELEASEDATE = "RELEASEDATE";
     private static final String DURATION = "DURATION";
+    private static final String CNT = "CNT";
     private final JdbcTemplate jdbcTemplate;
+    private final NamedParameterJdbcTemplate namedJdbcTemplate;
 
-    public DBFilmStorage(JdbcTemplate jdbcTemplate) {
+    public DBFilmStorage(JdbcTemplate jdbcTemplate,
+                         NamedParameterJdbcTemplate namedParameterJdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
+        this.namedJdbcTemplate = namedParameterJdbcTemplate;
+
     }
 
     @Override
     public List<Film> getFilms() {
-        String sqlQuery2 = "select * from FILMS";
-        List<Film> films = jdbcTemplate.query(sqlQuery2, (rs, rowNum) -> makeFilm(rs));
+        String sqlQuery2 = "select f.FILM_ID, " +
+                "       f.MPA_ID, " +
+                "       f.NAME, " +
+                "       f.DESCRIPTION, " +
+                "       f.RELEASEDATE, " +
+                "       f.DURATION, " +
+                "       m.NAME as MPA_NAME, " +
+                "       m.DESCRIPTION as MPA_DESCRIPTION, " +
+                "       count (fl.USER_ID) as CNT " +
+                "from FILMS as f " +
+                "left join MPAS as m on f.MPA_ID = M.MPA_ID " +
+                "left join FILMS_LIKES as fl on f.FILM_ID = FL.FILM_ID " +
+                "group by f.FILM_ID;";
+
+        List<Film> films = jdbcTemplate.query(sqlQuery2, (rs, rowNum) -> makeFilmOptimized(rs));
         for (Film film : films) {
-            setAdvFilmData(film);
+            setAdvFilmDataLow(film);
         }
         return films;
     }
@@ -76,10 +99,12 @@ public class DBFilmStorage implements FilmStorage {
             }
         }
         if (film.getDirectors() != null && !film.getDirectors().isEmpty()) {
-            String sqlQuery = "insert into FILMS_DIRECTORS(FILM_ID, DIRECTOR_ID) values (?, ?)";
+            List<Object[]> batch = new ArrayList<>();
             for (Director director : film.getDirectors()) {
-                jdbcTemplate.update(sqlQuery, film.getId(), director.getId());
+                Object[] values = new Object[]{film.getId(), director.getId()};
+                batch.add(values);
             }
+            jdbcTemplate.batchUpdate("insert into FILMS_DIRECTORS(FILM_ID, DIRECTOR_ID) values (?, ?)", batch);
         }
         return getFilm(film.getId());
     }
@@ -250,10 +275,7 @@ public class DBFilmStorage implements FilmStorage {
             }
         }
         Set<Long> filmsIds = getFilmsIdsForDirector(directorId);
-        List<Film> films = new ArrayList<>();
-        for (Long id : filmsIds) {
-            films.add(getFilm(id));
-        }
+        List<Film> films = getFilmsByIds(new ArrayList<>(filmsIds));
         if (year && likes) {
             return films.stream()
                     .sorted(Comparator.comparingInt(Film::getLikesCount))
@@ -347,6 +369,30 @@ public class DBFilmStorage implements FilmStorage {
         }
     }
 
+    private List<Film> getFilmsByIds(List<Long> ids) {
+        SqlParameterSource parameters = new MapSqlParameterSource("ids", ids);
+        String sqlQuery = "select f.FILM_ID, " +
+                "       f.MPA_ID, " +
+                "       f.NAME, " +
+                "       f.DESCRIPTION, " +
+                "       f.RELEASEDATE, " +
+                "       f.DURATION, " +
+                "       m.NAME as MPA_NAME, " +
+                "       m.DESCRIPTION as MPA_DESCRIPTION, " +
+                "       count (fl.USER_ID) as CNT " +
+                "from FILMS as f " +
+                "left join MPAS as m on f.MPA_ID = M.MPA_ID " +
+                "left join FILMS_LIKES as fl on f.FILM_ID = FL.FILM_ID " +
+                "where f.FILM_ID in (:ids) " +
+                "group by f.FILM_ID";
+        sqlQuery = String.format(sqlQuery, ids);
+        List<Film> films = namedJdbcTemplate.query(sqlQuery, parameters, (rs, rowNum) -> makeFilmOptimized(rs));
+        for (Film film : films) {
+            setAdvFilmDataLow(film);
+        }
+        return films;
+    }
+
     private Long makeFilmId(ResultSet rs) {
         try {
             return rs.getLong(FILM_ID);
@@ -433,6 +479,21 @@ public class DBFilmStorage implements FilmStorage {
         }
     }
 
+    private Film makeFilmOptimized(ResultSet rs) {
+        try {
+            return new Film(rs.getLong(FILM_ID),
+                    rs.getString(NAME),
+                    rs.getString(DESCRIPTION),
+                    rs.getDate(RELEASEDATE).toLocalDate(),
+                    rs.getInt(DURATION),
+                    new Mpa(rs.getLong(MPA_ID), rs.getString(MPA_NAME), rs.getString(MPA_DESCRIPTION)),
+                    null, null, rs.getInt(CNT));
+        } catch (SQLException e) {
+            log.warn("Ошибка получения фильма: {}", e.getMessage());
+            throw new SQLWorkException("Ошибка получения фильма");
+        }
+    }
+
     private void setGenresDataForFilm(Film film) {
         String sqlQuery = "delete from FILMS_GENRES where FILM_ID = ?";
         jdbcTemplate.update(sqlQuery, film.getId());
@@ -465,4 +526,10 @@ public class DBFilmStorage implements FilmStorage {
         film.setLikesCount(getLikesCount(film.getId()));
         film.setDirectors(getDirectorsForFilm(film.getId()));
     }
+
+    private void setAdvFilmDataLow(Film film) {
+        film.setGenres(getGenresDataForFilm(film.getId()));
+        film.setDirectors(getDirectorsForFilm(film.getId()));
+    }
 }
+

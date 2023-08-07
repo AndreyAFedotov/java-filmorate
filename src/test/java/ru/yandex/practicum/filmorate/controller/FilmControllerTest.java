@@ -5,6 +5,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Mpa;
@@ -130,7 +131,8 @@ public class FilmControllerTest {
                 .duration(DURATION)
                 .mpa(new Mpa(2, null, null))
                 .build();
-        FilmStorage filmSt = new DBFilmStorage(new JdbcTemplate());
+        JdbcTemplate jdbcTemplate = new JdbcTemplate();
+        FilmStorage filmSt = new DBFilmStorage(jdbcTemplate, new NamedParameterJdbcTemplate(jdbcTemplate));
         UserStorage userSt = new DBUserStorage(new JdbcTemplate());
         DirectorStorage dirSt = new DBDirectorStorage(new JdbcTemplate());
         EventStorage eventSt = new DBEventStorage(new JdbcTemplate());

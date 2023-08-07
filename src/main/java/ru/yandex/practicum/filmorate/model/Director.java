@@ -6,7 +6,6 @@ import lombok.Getter;
 import lombok.Setter;
 
 import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
 
 @AllArgsConstructor
 @Getter
@@ -16,6 +15,5 @@ public class Director {
     private long id;
 
     @NotBlank
-    @NotNull
     private String name;
 }
