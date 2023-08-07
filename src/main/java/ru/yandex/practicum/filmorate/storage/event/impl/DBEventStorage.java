@@ -26,16 +26,6 @@ public class DBEventStorage implements EventStorage {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    private Event mapRowToEvent(ResultSet rs, int rowNum) throws SQLException {
-        return Event.builder().eventId(rs.getLong("event_id"))
-                .userId(rs.getLong("user_id"))
-                .entityId(rs.getLong("entity_id"))
-                .eventType(EventType.valueOf(rs.getString("event_type")))
-                .operation(EventOperation.valueOf(rs.getString("event_operation")))
-                .timestamp(rs.getLong("timestamp"))
-                .build();
-    }
-
     @Override
     public Event addEvent(long userId, EventType eventType, EventOperation eventOperation, long entityId) {
 
@@ -77,5 +67,15 @@ public class DBEventStorage implements EventStorage {
     public List<Event> getEventOfUser(long userId) {
         String sql = "SELECT * FROM EVENTS WHERE USER_ID = ?";
         return jdbcTemplate.query(sql, this::mapRowToEvent, userId);
+    }
+
+    private Event mapRowToEvent(ResultSet rs, int rowNum) throws SQLException {
+        return Event.builder().eventId(rs.getLong("event_id"))
+                .userId(rs.getLong("user_id"))
+                .entityId(rs.getLong("entity_id"))
+                .eventType(EventType.valueOf(rs.getString("event_type")))
+                .operation(EventOperation.valueOf(rs.getString("event_operation")))
+                .timestamp(rs.getLong("timestamp"))
+                .build();
     }
 }
