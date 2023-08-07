@@ -302,13 +302,15 @@ public class DBFilmStorage implements FilmStorage {
 
         String modQuery = "%" + query + "%";
         String sqlQuery = "SELECT f.film_id, f.mpa_id, f.name, f.description, f.releaseDate, f.duration, " +
-                "COUNT(DISTINCT fl.user_id) AS amount_likes " +
+                "m.NAME as MPA_NAME, m.DESCRIPTION as MPA_DESCRIPTION, " +
+                "COUNT(DISTINCT fl.user_id) AS CNT " +
                 "FROM FILMS AS f " +
                 "LEFT JOIN FILMS_LIKES AS fl ON f.film_id = fl.film_id " +
                 "LEFT JOIN FILMS_DIRECTORS AS fd ON fd.film_id = f.film_id " +
                 "LEFT JOIN DIRECTORS AS d ON d.director_id = fd.director_id " +
+                "LEFT JOIN MPAS AS m ON m.MPA_ID = f.MPA_ID " +
                 "WHERE %s " +
-                "GROUP BY f.film_id ORDER BY amount_likes DESC";
+                "GROUP BY f.film_id ORDER BY CNT DESC";
         for (String str : by.split(",")) {
             if (str.equals("director")) {
                 director = true;
@@ -318,16 +320,16 @@ public class DBFilmStorage implements FilmStorage {
         }
         if (title && director) {
             sqlQuery = String.format(sqlQuery, "f.NAME ILIKE ? or d.NAME ILIKE ? ");
-            result = jdbcTemplate.query(sqlQuery, (rs, rowNum) -> makeFilm(rs), modQuery, modQuery);
+            result = jdbcTemplate.query(sqlQuery, (rs, rowNum) -> makeFilmOptimized(rs), modQuery, modQuery);
         } else if (director) {
             sqlQuery = String.format(sqlQuery, "d.NAME ILIKE ? ");
-            result = jdbcTemplate.query(sqlQuery, (rs, rowNum) -> makeFilm(rs), modQuery);
+            result = jdbcTemplate.query(sqlQuery, (rs, rowNum) -> makeFilmOptimized(rs), modQuery);
         } else if (title) {
             sqlQuery = String.format(sqlQuery, "f.NAME ILIKE ?");
-            result = jdbcTemplate.query(sqlQuery, (rs, rowNum) -> makeFilm(rs), modQuery);
+            result = jdbcTemplate.query(sqlQuery, (rs, rowNum) -> makeFilmOptimized(rs), modQuery);
         }
         for (Film film : result) {
-            setAdvFilmData(film);
+            setAdvFilmDataLow(film);
         }
         return result;
     }
