@@ -4,8 +4,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
-import ru.yandex.practicum.filmorate.model.enums.EventOperation;
-import ru.yandex.practicum.filmorate.model.enums.EventType;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.enums.EventOperation;
 import ru.yandex.practicum.filmorate.model.enums.EventType;
@@ -91,11 +89,7 @@ public class FilmService {
     }
 
     public List<Film> getPopularFilms(Integer count, Integer genreId, Integer year) {
-        if (!filmStorage.getFilms().isEmpty()) {
-            return filmStorage.getPopularFilms(count, genreId, year);
-        } else {
-            throw new NotFoundException("Список фильмов пуст");
-        }
+        return filmStorage.getPopularFilms(count, genreId, year);
     }
 
     public Film getFilm(long id) {

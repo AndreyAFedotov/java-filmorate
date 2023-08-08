@@ -11,7 +11,6 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.exception.SQLWorkException;
-import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Genre;
@@ -159,64 +158,39 @@ public class DBFilmStorage implements FilmStorage {
 
     @Override
     public List<Film> getPopularFilms(Integer count, Integer genreId, Integer year) {
-        String sqlQuery;
-        List<Film> films = new ArrayList<>();
-
-        if (genreId == 0 && year == 0) {
-            log.info("Фильтрация популярных фильмов без параметров");
-            sqlQuery = "SELECT F.FILM_ID, F.MPA_ID, F.NAME, F.DESCRIPTION, F.RELEASEDATE, F.DURATION, " +
-                    "COUNT (L.USER_ID) as CNT from FILMS as F " +
-                    "LEFT JOIN FILMS_LIKES L on F.FILM_ID = L.FILM_ID " +
-                    "GROUP BY F.FILM_ID " +
-                    "ORDER BY CNT desc " +
-                    "LIMIT ?";
-            films = jdbcTemplate.query(sqlQuery, (rs, rowNum) -> makeFilm(rs), count);
-        }
-        if (genreId > 0 && year == 0) {
-            log.info("Фильтрация популярных фильмов по жанрам");
-            sqlQuery = "SELECT F.FILM_ID, F.MPA_ID, F.NAME, F.DESCRIPTION, F.RELEASEDATE, F.DURATION, "
-                    + "COUNT (L.USER_ID) as CNT FROM FILMS as F "
-                    + "LEFT JOIN FILMS_LIKES L on F.FILM_ID = L.FILM_ID "
-                    + "LEFT JOIN FILMS_GENRES FG on F.FILM_ID = FG.FILM_ID "
-                    + "WHERE FG.GENRE_ID=? "
-                    + "GROUP BY F.FILM_ID, FG.GENRE_ID "
-                    + "ORDER BY CNT DESC "
-                    + "LIMIT ?";
-            films = jdbcTemplate.query(sqlQuery, (rs, rowNum) -> makeFilm(rs), genreId, count);
-        }
-        if (genreId == 0 && year > 0) {
-            log.info("Фильтрация популярных фильмов по годам");
-            sqlQuery = "SELECT F.FILM_ID, F.MPA_ID, F.NAME, F.DESCRIPTION, F.RELEASEDATE, F.DURATION, "
-                    + "COUNT(L.USER_ID) as CNT FROM FILMS as F "
-                    + "LEFT JOIN FILMS_LIKES L on F.FILM_ID = L.FILM_ID "
-                    + "WHERE EXTRACT(YEAR FROM F.RELEASEDATE)=? "
-                    + "GROUP BY F.FILM_ID "
-                    + "ORDER BY CNT DESC "
-                    + "LIMIT ?";
-            films = jdbcTemplate.query(sqlQuery, (rs, rowNum) -> makeFilm(rs), year, count);
-        }
+        String sqlQuery = "SELECT F.FILM_ID, F.MPA_ID, F.NAME, F.DESCRIPTION, F.RELEASEDATE, F.DURATION, "
+                + "COUNT (L.USER_ID) as CNT, "
+                + "m.NAME as MPA_NAME, m.DESCRIPTION as MPA_DESCRIPTION "
+                + "from FILMS as F "
+                + "LEFT JOIN FILMS_LIKES L on F.FILM_ID = L.FILM_ID "
+                + "LEFT JOIN MPAS as m on F.MPA_ID = m.MPA_ID "
+                + "%s "
+                + "WHERE %s "
+                + "GROUP BY F.FILM_ID %s "
+                + "ORDER BY CNT desc "
+                + "LIMIT ?";
+        String joinGenresQuery = genreId > 0 ? "LEFT JOIN FILMS_GENRES FG on F.FILM_ID = FG.FILM_ID " : "";
+        String whereCondition;
+        String groupByGenre = "";
         if (genreId > 0 && year > 0) {
-            log.info("Фильтрация популярных фильмов по жанрам и годам");
-            sqlQuery = "SELECT F.FILM_ID, F.MPA_ID, F.NAME, F.DESCRIPTION, F.RELEASEDATE, F.DURATION, "
-                    + "COUNT (L.USER_ID) as CNT from FILMS as F "
-                    + "LEFT JOIN FILMS_LIKES L on F.FILM_ID = L.FILM_ID "
-                    + "LEFT JOIN FILMS_GENRES FG on F.FILM_ID = FG.FILM_ID "
-                    + "WHERE FG.GENRE_ID=? "
-                    + "AND EXTRACT(YEAR FROM F.RELEASEDATE)=? "
-                    + "GROUP BY F.FILM_ID, FG.GENRE_ID "
-                    + "ORDER BY CNT DESC "
-                    + "LIMIT ?";
-            films = jdbcTemplate.query(sqlQuery, (rs, rowNum) -> makeFilm(rs), genreId, year,
-                    count);
+            whereCondition = "FG.GENRE_ID=? AND EXTRACT(YEAR FROM F.RELEASEDATE)=?";
+            groupByGenre = ", FG.GENRE_ID";
+        } else if (genreId > 0) {
+            whereCondition = "FG.GENRE_ID=?";
+            groupByGenre = ", FG.GENRE_ID";
+        } else if (year > 0) {
+            whereCondition = "EXTRACT(YEAR FROM F.RELEASEDATE)=?";
+        } else {
+            whereCondition = "1=1";
         }
-        if (genreId < 0 && year < 0) {
-            throw new ValidationException(String.format(
-                    "Неверные параметры фильтрации популярных фильмов"
-                            + " genreId = %d and year = %d.", genreId, year));
-        }
-
+        String formattedSql = String.format(sqlQuery, joinGenresQuery, whereCondition, groupByGenre);
+        List<Object> queryParams = new ArrayList<>();
+        if (genreId > 0) queryParams.add(genreId);
+        if (year > 0) queryParams.add(year);
+        queryParams.add(count);
+        List<Film> films = jdbcTemplate.query(formattedSql, (rs, rowNum) -> makeFilmOptimized(rs), queryParams.toArray());
         for (Film film : films) {
-            setAdvFilmData(film);
+            setAdvFilmDataLow(film);
         }
         return films;
     }
@@ -464,21 +438,6 @@ public class DBFilmStorage implements FilmStorage {
         }
     }
 
-    private Film makeFilm(ResultSet rs) {
-        try {
-            return new Film(rs.getLong(FILM_ID),
-                    rs.getString(NAME),
-                    rs.getString(DESCRIPTION),
-                    rs.getDate(RELEASEDATE).toLocalDate(),
-                    rs.getInt(DURATION),
-                    new Mpa(rs.getLong(MPA_ID), null, null),
-                    null, null, 0);
-        } catch (SQLException e) {
-            log.warn("Ошибка получения фильма: {}", e.getMessage());
-            throw new SQLWorkException("Ошибка получения фильма");
-        }
-    }
-
     private Film makeFilmOptimized(ResultSet rs) {
         try {
             return new Film(rs.getLong(FILM_ID),
@@ -520,13 +479,6 @@ public class DBFilmStorage implements FilmStorage {
             }
             jdbcTemplate.batchUpdate("insert into FILMS_DIRECTORS (film_id, director_id) values (?, ? )", batch);
         }
-    }
-
-    private void setAdvFilmData(Film film) {
-        film.setMpa(getMpaDataByMpaId(film.getMpa().getId()));
-        film.setGenres(getGenresDataForFilm(film.getId()));
-        film.setLikesCount(getLikesCount(film.getId()));
-        film.setDirectors(getDirectorsForFilm(film.getId()));
     }
 
     private void setAdvFilmDataLow(Film film) {
