@@ -166,6 +166,14 @@ public class DBUserStorage implements UserStorage {
         return null;
     }
 
+    @Override
+    public User deleteUser(long id) {
+        User user = getUser(id);
+        String sqlQuery = "DELETE FROM USERS WHERE USER_ID=?";
+        jdbcTemplate.update(sqlQuery, id);
+        return user;
+    }
+
     private List<Long> getFriendsForId(Long id) {
         String sqlQuery = "select USER_TWO_ID from FRIENDSHIPS where USER_ONE_ID=?";
         return (jdbcTemplate.query(sqlQuery, (rs, rowNum) -> makeFriendId(rs), id));
