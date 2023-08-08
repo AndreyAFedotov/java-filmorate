@@ -91,10 +91,11 @@ CREATE TABLE IF NOT EXISTS USEFULS
 (
     review_id int NOT NULL,
     user_id int NOT NULL,
-    useful_status boolean,
+    useful_status int NOT NULL,
     PRIMARY KEY (review_id, user_id),
     CONSTRAINT fk_review_id FOREIGN KEY(review_id) REFERENCES reviews(review_id) ON DELETE CASCADE,
-    CONSTRAINT fk_user_d FOREIGN KEY(user_id) REFERENCES users(user_id) ON DELETE CASCADE
+    CONSTRAINT fk_user_d FOREIGN KEY(user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    CONSTRAINT chk_useful_status CHECK (useful_status IN (1, -1))
 );
 
 CREATE TABLE IF NOT EXISTS EVENTS
