@@ -159,65 +159,43 @@ public class DBFilmStorage implements FilmStorage {
 
     @Override
     public List<Film> getPopularFilms(Integer count, Integer genreId, Integer year) {
-        String sqlQuery;
-        List<Film> films = new ArrayList<>();
+        String SQL_POPULAR_FILM = "SELECT F.FILM_ID, F.MPA_ID, F.NAME, F.DESCRIPTION, F.RELEASEDATE, F.DURATION, "
+                + "COUNT (L.USER_ID) as CNT from FILMS as F "
+                + "LEFT JOIN FILMS_LIKES L on F.FILM_ID = L.FILM_ID "
+                + "%s "
+                + "WHERE %s "
+                + "GROUP BY F.FILM_ID %s "
+                + "ORDER BY CNT desc "
+                + "LIMIT ?";
+        String joinGenresQuery = genreId > 0 ? "LEFT JOIN FILMS_GENRES FG on F.FILM_ID = FG.FILM_ID " : "";
+        String whereCondition;
+        String groupByGenre = "";
 
-        if (genreId == 0 && year == 0) {
-            log.info("Фильтрация популярных фильмов без параметров");
-            sqlQuery = "SELECT F.FILM_ID, F.MPA_ID, F.NAME, F.DESCRIPTION, F.RELEASEDATE, F.DURATION, " +
-                    "COUNT (L.USER_ID) as CNT from FILMS as F " +
-                    "LEFT JOIN FILMS_LIKES L on F.FILM_ID = L.FILM_ID " +
-                    "GROUP BY F.FILM_ID " +
-                    "ORDER BY CNT desc " +
-                    "LIMIT ?";
-            films = jdbcTemplate.query(sqlQuery, (rs, rowNum) -> makeFilm(rs), count);
-        }
-        if (genreId > 0 && year == 0) {
-            log.info("Фильтрация популярных фильмов по жанрам");
-            sqlQuery = "SELECT F.FILM_ID, F.MPA_ID, F.NAME, F.DESCRIPTION, F.RELEASEDATE, F.DURATION, "
-                    + "COUNT (L.USER_ID) as CNT FROM FILMS as F "
-                    + "LEFT JOIN FILMS_LIKES L on F.FILM_ID = L.FILM_ID "
-                    + "LEFT JOIN FILMS_GENRES FG on F.FILM_ID = FG.FILM_ID "
-                    + "WHERE FG.GENRE_ID=? "
-                    + "GROUP BY F.FILM_ID, FG.GENRE_ID "
-                    + "ORDER BY CNT DESC "
-                    + "LIMIT ?";
-            films = jdbcTemplate.query(sqlQuery, (rs, rowNum) -> makeFilm(rs), genreId, count);
-        }
-        if (genreId == 0 && year > 0) {
-            log.info("Фильтрация популярных фильмов по годам");
-            sqlQuery = "SELECT F.FILM_ID, F.MPA_ID, F.NAME, F.DESCRIPTION, F.RELEASEDATE, F.DURATION, "
-                    + "COUNT(L.USER_ID) as CNT FROM FILMS as F "
-                    + "LEFT JOIN FILMS_LIKES L on F.FILM_ID = L.FILM_ID "
-                    + "WHERE EXTRACT(YEAR FROM F.RELEASEDATE)=? "
-                    + "GROUP BY F.FILM_ID "
-                    + "ORDER BY CNT DESC "
-                    + "LIMIT ?";
-            films = jdbcTemplate.query(sqlQuery, (rs, rowNum) -> makeFilm(rs), year, count);
-        }
         if (genreId > 0 && year > 0) {
-            log.info("Фильтрация популярных фильмов по жанрам и годам");
-            sqlQuery = "SELECT F.FILM_ID, F.MPA_ID, F.NAME, F.DESCRIPTION, F.RELEASEDATE, F.DURATION, "
-                    + "COUNT (L.USER_ID) as CNT from FILMS as F "
-                    + "LEFT JOIN FILMS_LIKES L on F.FILM_ID = L.FILM_ID "
-                    + "LEFT JOIN FILMS_GENRES FG on F.FILM_ID = FG.FILM_ID "
-                    + "WHERE FG.GENRE_ID=? "
-                    + "AND EXTRACT(YEAR FROM F.RELEASEDATE)=? "
-                    + "GROUP BY F.FILM_ID, FG.GENRE_ID "
-                    + "ORDER BY CNT DESC "
-                    + "LIMIT ?";
-            films = jdbcTemplate.query(sqlQuery, (rs, rowNum) -> makeFilm(rs), genreId, year,
-                    count);
+            whereCondition = "FG.GENRE_ID=? AND EXTRACT(YEAR FROM F.RELEASEDATE)=?";
+            groupByGenre = ", FG.GENRE_ID";
+        } else if (genreId > 0) {
+            whereCondition = "FG.GENRE_ID=?";
+            groupByGenre = ", FG.GENRE_ID";
+        } else if (year > 0) {
+            whereCondition = "EXTRACT(YEAR FROM F.RELEASEDATE)=?";
+        } else {
+            whereCondition = "1=1";
         }
-        if (genreId < 0 && year < 0) {
-            throw new ValidationException(String.format(
-                    "Неверные параметры фильтрации популярных фильмов"
-                            + " genreId = %d and year = %d.", genreId, year));
-        }
+
+        String formattedSql = String.format(SQL_POPULAR_FILM, joinGenresQuery, whereCondition, groupByGenre);
+
+        List<Object> queryParams = new ArrayList<>();
+        if (genreId > 0) queryParams.add(genreId);
+        if (year > 0) queryParams.add(year);
+        queryParams.add(count);
+
+        List<Film> films = jdbcTemplate.query(formattedSql, (rs, rowNum) -> makeFilm(rs), queryParams.toArray());
 
         for (Film film : films) {
             setAdvFilmData(film);
         }
+
         return films;
     }
 
