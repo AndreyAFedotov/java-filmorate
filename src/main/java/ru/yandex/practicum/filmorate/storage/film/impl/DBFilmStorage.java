@@ -459,11 +459,14 @@ public class DBFilmStorage implements FilmStorage {
 
         if (film.getGenres() != null && !film.getGenres().isEmpty()) {
             Set<Genre> genres = new HashSet<>(film.getGenres());
-            sqlQuery = "insert into FILMS_GENRES (FILM_ID, GENRE_ID) values (?, ? )";
+            List<Object[]> batch = new ArrayList<>();
             for (Genre genre : genres) {
-                jdbcTemplate.update(sqlQuery, film.getId(), genre.getId());
+                Object[] values = new Object[]{film.getId(), genre.getId()};
+                batch.add(values);
             }
+            jdbcTemplate.batchUpdate("insert into FILMS_GENRES (FILM_ID, GENRE_ID) values (?, ? )", batch);
         }
+
     }
 
     private void setDirectorsDataForFilm(Film film) {
