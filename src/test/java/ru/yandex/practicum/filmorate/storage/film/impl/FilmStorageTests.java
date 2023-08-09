@@ -79,9 +79,9 @@ class FilmStorageTests {
     void setLikeToFilmTest() {
         User user = userStorage.createUser(createUser());
         Film film = filmStorage.createFilm(createFilm());
-        filmStorage.setLikeToFilm(film.getId(), user.getId());
+        filmStorage.setLikeToFilm(film.getId(), user.getId(), 8);
         Film result = filmStorage.getFilm(film.getId());
-        assertEquals(1, result.getLikesCount(), "Ошибка установки лайка");
+        assertEquals(8, result.getRating(), "Ошибка установки лайка");
     }
 
     @Test
@@ -89,12 +89,12 @@ class FilmStorageTests {
     void deleteLikeFromFilmTest() {
         User user = userStorage.createUser(createUser());
         Film film = filmStorage.createFilm(createFilm());
-        filmStorage.setLikeToFilm(film.getId(), user.getId());
+        filmStorage.setLikeToFilm(film.getId(), user.getId(), 7);
         Film fTwo = filmStorage.getFilm(film.getId());
-        assertEquals(1, fTwo.getLikesCount(), "Ошибка установки лайка");
+        assertEquals(7, fTwo.getRating(), "Ошибка установки лайка");
         filmStorage.deleteLikeFromFilm(film.getId(), user.getId());
         Film result = filmStorage.getFilm(film.getId());
-        assertEquals(0, result.getLikesCount(), "Ошибка удаления лайка");
+        assertEquals(0, result.getRating(), "Ошибка удаления лайка");
     }
 
     @Test
@@ -107,6 +107,49 @@ class FilmStorageTests {
         assertEquals(2, films.size(), "Ошибка списка популярных ");
     }
 
+    @Test
+    @DisplayName("Корректность расчета рейтинга")
+    void filmRatingTest() {
+        Film film = filmStorage.createFilm(createFilm());
+        User user1 = userStorage.createUser(createUser());
+        User user2 = userStorage.createUser(createUser());
+        filmStorage.setLikeToFilm(film.getId(), user1.getId(), 10);
+        filmStorage.setLikeToFilm(film.getId(), user2.getId(), 5);
+        Film result = filmStorage.getFilm(film.getId());
+        assertEquals(7.5, result.getRating());
+    }
+
+    @Test
+    @DisplayName("Сортировка по популярности по рейтингу")
+    void popularTest() {
+        Film film1 = filmStorage.createFilm(createFilm());
+        Film film2 = filmStorage.createFilm(createFilm());
+        User user1 = userStorage.createUser(createUser());
+        User user2 = userStorage.createUser(createUser());
+        filmStorage.setLikeToFilm(film1.getId(), user1.getId(), 9);
+        filmStorage.setLikeToFilm(film2.getId(), user1.getId(), 10);
+        filmStorage.setLikeToFilm(film2.getId(), user2.getId(), 5);
+        List<Film> result = filmStorage.getPopularFilms(10, 0, 0);
+        assertEquals(2, result.size());
+        film1 = result.get(0);
+        assertEquals(1, film1.getId());
+    }
+
+    @Test
+    @DisplayName("Общие только с позитивными оценками")
+    void commonFilmsTest() {
+        Film film1 = filmStorage.createFilm(createFilm());
+        Film film2 = filmStorage.createFilm(createFilm());
+        User user1 = userStorage.createUser(createUser());
+        User user2 = userStorage.createUser(createUser());
+        filmStorage.setLikeToFilm(film2.getId(), user1.getId(), 10);
+        filmStorage.setLikeToFilm(film2.getId(), user2.getId(), 5);
+        filmStorage.setLikeToFilm(film1.getId(), user1.getId(), 10);
+        filmStorage.setLikeToFilm(film1.getId(), user2.getId(), 4);
+        List<Film> result = filmStorage.getCommonFilms(user1.getId(), user2.getId());
+        assertEquals(1, result.size());
+        assertEquals(2, result.get(0).getId());
+    }
 
     private Film createFilm() {
         Set<Genre> genres = new HashSet<>();
