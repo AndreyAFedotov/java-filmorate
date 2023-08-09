@@ -143,7 +143,7 @@ class FilmStorageTests {
         User user1 = userStorage.createUser(createUser());
         User user2 = userStorage.createUser(createUser());
         filmStorage.setLikeToFilm(film2.getId(), user1.getId(), 10);
-        filmStorage.setLikeToFilm(film2.getId(), user2.getId(), 5);
+        filmStorage.setLikeToFilm(film2.getId(), user2.getId(), 6);
         filmStorage.setLikeToFilm(film1.getId(), user1.getId(), 10);
         filmStorage.setLikeToFilm(film1.getId(), user2.getId(), 4);
         List<Film> result = filmStorage.getCommonFilms(user1.getId(), user2.getId());

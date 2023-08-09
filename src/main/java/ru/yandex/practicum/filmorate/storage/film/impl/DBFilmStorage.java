@@ -229,8 +229,8 @@ public class DBFilmStorage implements FilmStorage {
         String sqlQuery = "select f.FILM_ID, f.MPA_ID, f.NAME, f.DESCRIPTION, f.RELEASEDATE, f.DURATION, " +
                 "m.NAME AS MPA_NAME, m.DESCRIPTION as MPA_DESCRIPTION, count(flc.USER_ID) as CNT " +
                 "from FILMS as f " +
-                "inner join FILMS_LIKES as l1 ON f.FILM_ID = l1.FILM_ID and l1.USER_ID = ? and l1.MARK > 4 " +
-                "join FILMS_LIKES as l2 ON l1.FILM_ID = l2.FILM_ID and l2.USER_ID = ? and l2.MARK > 4 " +
+                "inner join FILMS_LIKES as l1 ON f.FILM_ID = l1.FILM_ID and l1.USER_ID = ? and l1.MARK > 5 " +
+                "join FILMS_LIKES as l2 ON l1.FILM_ID = l2.FILM_ID and l2.USER_ID = ? and l2.MARK > 5 " +
                 "left join MPAS as m ON m.MPA_ID = f.MPA_ID " +
                 "left join FILMS_LIKES as flc ON flc.FILM_ID = f.FILM_ID " +
                 "group by f.FILM_ID";
