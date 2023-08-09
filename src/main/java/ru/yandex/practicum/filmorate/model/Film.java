@@ -37,7 +37,7 @@ public class Film {
 
     private Set<Genre> genres;
 
-    private Set<Long> likes;
+    private Set<Director> directors;
 
     private int likesCount;
 }

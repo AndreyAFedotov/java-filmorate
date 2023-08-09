@@ -4,14 +4,20 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.Mpa;
 import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.storage.director.DirectorStorage;
+import ru.yandex.practicum.filmorate.storage.director.impl.DBDirectorStorage;
+import ru.yandex.practicum.filmorate.storage.event.EventStorage;
+import ru.yandex.practicum.filmorate.storage.event.impl.DBEventStorage;
 import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.film.impl.InMemoryFilmStorage;
+import ru.yandex.practicum.filmorate.storage.film.impl.DBFilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
-import ru.yandex.practicum.filmorate.storage.user.impl.InMemoryUserStorage;
+import ru.yandex.practicum.filmorate.storage.user.impl.DBUserStorage;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.Validation;
@@ -125,9 +131,12 @@ public class FilmControllerTest {
                 .duration(DURATION)
                 .mpa(new Mpa(2, null, null))
                 .build();
-        FilmStorage filmSt = new InMemoryFilmStorage();
-        UserStorage userSt = new InMemoryUserStorage();
-        FilmService filmSv = new FilmService(filmSt, userSt);
+        JdbcTemplate jdbcTemplate = new JdbcTemplate();
+        FilmStorage filmSt = new DBFilmStorage(jdbcTemplate, new NamedParameterJdbcTemplate(jdbcTemplate));
+        UserStorage userSt = new DBUserStorage(new JdbcTemplate());
+        DirectorStorage dirSt = new DBDirectorStorage(new JdbcTemplate());
+        EventStorage eventSt = new DBEventStorage(new JdbcTemplate());
+        FilmService filmSv = new FilmService(filmSt, userSt, dirSt, eventSt);
         FilmController filmCnt = new FilmController(filmSv);
         Throwable thrown = assertThrows(ValidationException.class, () ->
                 filmCnt.createFilm(film));

@@ -2,10 +2,14 @@ package ru.yandex.practicum.filmorate.service;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.model.enums.EventOperation;
+import ru.yandex.practicum.filmorate.model.enums.EventType;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.event.EventStorage;
+import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.util.List;
@@ -13,10 +17,14 @@ import java.util.List;
 @Service
 public class UserService {
     private final UserStorage userStorage;
+    private final EventStorage eventStorage;
+    private final FilmStorage filmStorage;
 
     @Autowired
-    public UserService(@Qualifier("DBUserStorage") UserStorage userStorage) {
+    public UserService(UserStorage userStorage, EventStorage eventStorage, FilmStorage filmStorage) {
         this.userStorage = userStorage;
+        this.eventStorage = eventStorage;
+        this.filmStorage = filmStorage;
     }
 
     public List<User> getUsers() {
@@ -42,15 +50,22 @@ public class UserService {
         return userStorage.updateUser(user);
     }
 
+    public User deleteUser(long id) {
+        checkUserIsExist(id);
+        return userStorage.deleteUser(id);
+    }
+
     public User addToFriends(long id, long friendId) {
         checkUserIsExist(id);
         checkUserIsExist(friendId);
+        eventStorage.addEvent(id, EventType.FRIEND, EventOperation.ADD, friendId);
         return userStorage.addFriend(id, friendId);
     }
 
     public User deleteFromFriends(long id, long friendId) {
         checkUserIsExist(id);
         checkUserIsExist(friendId);
+        eventStorage.addEvent(id, EventType.FRIEND, EventOperation.REMOVE, friendId);
         return userStorage.deleteFromFriends(id, friendId);
     }
 
@@ -74,5 +89,10 @@ public class UserService {
     public User getUser(long id) {
         checkUserIsExist(id);
         return userStorage.getUser(id);
+    }
+
+    public List<Film> getRecommendationsByUserId(long id) {
+        checkUserIsExist(id);
+        return filmStorage.getRecommendationsByUserId(id);
     }
 }
