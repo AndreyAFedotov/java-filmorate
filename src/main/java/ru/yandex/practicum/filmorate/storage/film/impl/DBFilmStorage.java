@@ -318,21 +318,24 @@ public class DBFilmStorage implements FilmStorage {
 
     @Override
     public List<Film> getRecommendationsByUserId(long id) {
-        final String sqlQuery = "select distinct FILM_ID " +
-                                "from FILMS_LIKES " +
-                                "where FILM_ID not in (select FILM_ID " +
-                                         "from FILMS_LIKES " +
-                                         "where USER_ID = ?) " +
-                                "and USER_ID in (select USER_ID " +
-                                        "from (select USER_ID, COUNT(FILM_ID) as COUNT_FILM " +
-                                                "from FILMS_LIKES " +
-                                                "where USER_ID != ? and FILM_ID in (select FILM_ID " +
-                                                        "from FILMS_LIKES " +
-                                                        "where  FILM_ID  in (select FILM_ID " +
-                                                                "from FILMS_LIKES " +
-                                                                "where USER_ID = ?)) " +
-                                                        "group by USER_ID) as CF " +
-                                "where COUNT_FILM = (select MAX(COUNT_FILM)))";
+        final String sqlQuery = "select distinct FILM_ID, " +
+                "                (SUM (MARK) / COUNT (USER_ID)) as RATE " +
+                "from FILMS_LIKES " +
+                "where FILM_ID not in (select FILM_ID " +
+                "                      from FILMS_LIKES " +
+                "                      where USER_ID = ?) " +
+                "and USER_ID in (select USER_ID " +
+                "                from (select USER_ID, COUNT(FILM_ID) as COUNT_FILM " +
+                "                      from FILMS_LIKES " +
+                "                      where USER_ID != ? and FILM_ID in (select FILM_ID " +
+                "                                                         from FILMS_LIKES " +
+                "                                                         where FILM_ID  in (select FILM_ID " +
+                "                                                         from FILMS_LIKES " +
+                "                                                         where USER_ID = ?)) " +
+                "group by USER_ID) as CF " +
+                "where COUNT_FILM = (select MAX(COUNT_FILM))) " +
+                "group by FILM_ID " +
+                "having RATE > 5";
         List<Long> filmIds = jdbcTemplate.query(sqlQuery, (rs, rowNum) -> makeFilmId(rs), id, id, id);
         return getFilmsByIds(filmIds);
     }
