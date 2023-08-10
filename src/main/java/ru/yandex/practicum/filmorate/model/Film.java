@@ -39,5 +39,5 @@ public class Film {
 
     private Set<Director> directors;
 
-    private int likesCount;
+    private double rating;
 }
