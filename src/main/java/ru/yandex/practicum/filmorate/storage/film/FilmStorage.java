@@ -15,7 +15,7 @@ public interface FilmStorage {
 
     boolean isExists(long id);
 
-    Film setLikeToFilm(long id, long userId);
+    Film setLikeToFilm(long id, long userId, int mark);
 
     Film deleteLikeFromFilm(long id, long userId);
 

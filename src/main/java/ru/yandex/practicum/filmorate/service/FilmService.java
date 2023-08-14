@@ -51,11 +51,11 @@ public class FilmService {
         return filmStorage.updateFilm(film);
     }
 
-    public Film setLikeToFilm(long id, long userId) {
+    public Film setLikeToFilm(long id, long userId, int mark) {
         checkFilmIsExist(id);
         checkUserIsExist(userId);
         eventStorage.addEvent(userId, EventType.LIKE, EventOperation.ADD, id);
-        return filmStorage.setLikeToFilm(id, userId);
+        return filmStorage.setLikeToFilm(id, userId, mark);
     }
 
     public Film deleteLikeFromFilm(long id, long userId) {
